@@ -1,7 +1,7 @@
 name: extension_utils
 description: A util library that contains various extensions for strings, lists, maps, and more.
 version: 1.0.0
-homepage: 'https://pub.dev/packages/extension_utils'
+homepage: "https://github.com/oi-narendra/extension_utils"
 
 environment:
   sdk: ">=2.18.0 <3.0.0"
