@@ -1,6 +1,8 @@
 import 'package:extension_utils/string_utils.dart';
 import 'package:flutter/foundation.dart';
 
+import 'model/pair.dart';
+
 extension MapUtils on Map {
   /// Returns `true` if the map is empty, `false` otherwise.
   bool get isEmpty => length == 0;
@@ -142,7 +144,8 @@ extension MapUtils on Map {
 
   /// Split map into two maps based on the [predicate].
   /// Returns a list of two maps.
-  List<Map<K, V>> partition<K, V>(bool Function(K key, V value) predicate) {
+  Pair<Map<K, V>, Map<K, V>> partition<K, V>(
+      bool Function(K key, V value) predicate) {
     final map1 = <K, V>{};
     final map2 = <K, V>{};
     for (final key in keys) {
@@ -152,7 +155,7 @@ extension MapUtils on Map {
         map2[key] = this[key] as V;
       }
     }
-    return [map1, map2];
+    return Pair(map1, map2);
   }
 
   /// Returns a new map with all entries that satisfy the given [predicate].

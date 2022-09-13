@@ -1,3 +1,5 @@
+import 'model/pair.dart';
+
 /// Extension methods for [List]s.
 
 extension ListUtils<T> on List<T> {
@@ -136,7 +138,7 @@ extension ListUtils<T> on List<T> {
   /// The first list contains all elements for which [f] returns `true`.
   /// The second list contains all elements for which [f] returns `false`.
 
-  List<List<T>> partition(bool Function(T) f) {
+  Pair<List<T>, List<T>> partition(bool Function(T) f) {
     final list1 = <T>[];
     final list2 = <T>[];
     for (final item in this) {
@@ -146,7 +148,7 @@ extension ListUtils<T> on List<T> {
         list2.add(item);
       }
     }
-    return [list1, list2];
+    return Pair(list1, list2);
   }
 
   /// Check if the list contains all elements of [List] [items].
@@ -162,10 +164,16 @@ extension ListUtils<T> on List<T> {
   /// Merge the list with [List] [items].
   /// Returns a new list with all elements of the list and [items].
 
-  List<T> mergeList(List<T> items) {
+  List<T> mergeList(List<T> items, {bool unique = false}) {
     final list = <T>[];
     list.addAll(this);
-    list.addAll(items);
+    if (unique) {
+      for (final item in items) {
+        if (!list.contains(item)) list.add(item);
+      }
+    } else {
+      list.addAll(items);
+    }
     return list;
   }
 
@@ -225,5 +233,137 @@ extension ListUtils<T> on List<T> {
     if (isEmpty && items.isEmpty) return;
     clear();
     addAll(items);
+  }
+
+  /// Sort the list by [f].
+  /// Returns a new list sorted by [f].
+
+  List<T> sortedBy(dynamic Function(T) f) {
+    final list = <T>[];
+    list.addAll(this);
+    list.sort((a, b) {
+      final valueA = f(a);
+      final valueB = f(b);
+      if (valueA == null) {
+        if (valueB == null) {
+          return 0;
+        } else {
+          return 1;
+        }
+      } else if (valueB == null) {
+        return -1;
+      } else if (valueA is num) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is String) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is bool) {
+        return valueA == valueB ? 0 : (valueA ? 1 : -1);
+      } else if (valueA is DateTime) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is Comparable) {
+        return valueA.compareTo(valueB);
+      } else {
+        return 0;
+      }
+    });
+    return list;
+  }
+
+  // Sort the list by [f] descending.
+  /// Returns a new list sorted by [f] descending.
+
+  List<T> sortedByDescending(dynamic Function(T) f) {
+    final list = <T>[];
+    list.addAll(this);
+    list.sort((a, b) {
+      final valueA = f(a);
+      final valueB = f(b);
+      if (valueA == null) {
+        if (valueB == null) {
+          return 0;
+        } else {
+          return -1;
+        }
+      } else if (valueB == null) {
+        return 1;
+      } else if (valueA is num) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is String) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is bool) {
+        return valueA == valueB ? 0 : (valueA ? -1 : 1);
+      } else if (valueA is DateTime) {
+        return valueA.compareTo(valueB);
+      } else if (valueA is Comparable) {
+        return valueA.compareTo(valueB);
+      } else {
+        return 0;
+      }
+    });
+    return list;
+  }
+
+  /// Group the list by [f].
+  /// Returns a [Map] with the keys and values returned by [f].
+
+  Map<K, List<T>> groupBy<K>(K Function(T) f) {
+    final map = <K, List<T>>{};
+    for (final item in this) {
+      final key = f(item);
+      if (map.containsKey(key)) {
+        map[key]!.add(item);
+      } else {
+        map[key] = [item];
+      }
+    }
+    return map;
+  }
+
+  /// Join to [String] with [separator], [prefix] and [suffix], and [transform] function.
+  /// Returns a [String] with the elements joined by [separator], [prefix] and [suffix], and transformed by [transform].
+  /// If [transform] is `null`, the elements are converted to [String] with `toString()`.
+
+  String joinToString(
+    String separator, {
+    String prefix = '',
+    String suffix = '',
+    String Function(T)? transform,
+  }) {
+    final buffer = StringBuffer();
+    buffer.write(prefix);
+    for (var i = 0; i < length; i++) {
+      if (i > 0) buffer.write(separator);
+      buffer.write(transform == null ? this[i].toString() : transform(this[i]));
+    }
+    buffer.write(suffix);
+    return buffer.toString();
+  }
+
+  /// Take while [f] is true.
+  /// Returns a new list with the elements taken while [f] is true.
+
+  List<T> takeWhile(bool Function(T) f) {
+    final list = <T>[];
+    for (final item in this) {
+      if (f(item)) {
+        list.add(item);
+      } else {
+        break;
+      }
+    }
+    return list;
+  }
+
+  /// Take if [f] is true.
+  ///  Returns a new list with the elements taken if [f] is true.
+
+  List<T> takeIf(bool Function(T) f) {
+    final list = <T>[];
+    for (final item in this) {
+      if (f(item)) {
+        list.add(item);
+      }
+    }
+    return list;
   }
 }

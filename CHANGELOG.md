@@ -5,3 +5,7 @@
       - Added number extensions
       - Added string extensions
       - Added datetime extensions 
+
+## 1.0.1
+   - Added sortedBy, sortedByDescending, groupBy, takeIf, takeWhile, joinToString extensions in list
+   - Updated partition extension in list/map to return a pair of lists
