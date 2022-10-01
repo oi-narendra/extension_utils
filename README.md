@@ -7,6 +7,8 @@ A util library that contains various extensions for strings, lists, maps, and mo
 - [x] Map extensions
 - [x] DateTime extensions
 - [x] Number extensions
+- [x] Enum extensions
+- [ ] Color extensions  
 
 ### Installation
 
@@ -14,7 +16,7 @@ Add the following to your pubspec.yaml file:
 
 ```yaml
 dependencies:
-  extension_utils: ^1.0.
+  extension_utils: ^1.0.1
 ```
 
 ### Usage
@@ -393,6 +395,30 @@ DateTime.now().isLeapYear() // false
 
 DateTime.now().daysUntilWeekend() // 5
 ```
+
+### Enum Extensions
+
+```dart
+enum UserType { admin, user, guest }
+
+UserType userType = UserType.admin;
+
+userType.when({
+  UserType.admin: () => debugPrint('Admin'),
+  UserType.user: () => debugPrint('User'),
+  UserType.guest: () => debugPrint('Guest'),
+}) // 'Admin'
+
+userType.whenOrElse({
+  UserType.admin: () => debugPrint('Admin'),
+  UserType.user: () => debugPrint('User'),
+}, orElse: () => debugPrint('Guest')) // 'Admin'
+
+```
+
+### Color Extensions
+
+- will be added soon
 
 ## Contributing
 

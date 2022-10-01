@@ -1,3 +1,4 @@
+import 'package:extension_utils/enum_utils.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,6 +31,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  UserType user = UserType.admin;
+
   @override
   void initState() {
     super.initState();
@@ -37,8 +40,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    user.when({
+      UserType.admin: () => debugPrint('Admin'),
+      UserType.user: () => debugPrint('User'),
+      UserType.guest: () => debugPrint('Guest')
+    });
     return const Scaffold(
       body: Center(child: Text('Example')),
     );
   }
+}
+
+enum UserType {
+  admin,
+  user,
+  guest,
+}
+
+enum Color {
+  red,
+  green,
+  blue,
 }

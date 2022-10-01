@@ -191,12 +191,10 @@ extension ListUtils<T> on List<T> {
   /// Distinct the list by [f].
   /// Returns a new list with distinct elements based on [f].
 
-  List<T> distinctBy(bool Function(T) f) {
+  List<T> distinctBy(dynamic Function(T) f) {
     final list = <T>[];
     for (final item in this) {
-      if (!list.any((e) => f(e))) {
-        list.add(item);
-      }
+      if (!list.any((e) => f(e) == f(item))) list.add(item);
     }
     return list;
   }
