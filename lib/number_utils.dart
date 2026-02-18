@@ -266,4 +266,197 @@ extension NumberUtils on num {
     final rng = math.Random();
     return List.generate(toInt(), (_) => rng.nextInt(max - min) + min);
   }
+
+  // ─── Clamping ────────────────────────────────────────────────────────────────
+
+  /// Clamps this number to the range [min]..[max].
+  ///
+  /// ```dart
+  /// 150.clampTo(0, 100) // 100
+  /// -5.clampTo(0, 100)  // 0
+  /// ```
+  num clampTo(num min, num max) => this < min ? min : (this > max ? max : this);
+
+  // ─── File Size ───────────────────────────────────────────────────────────────
+
+  /// Formats this number (bytes) as a human-readable file size string.
+  ///
+  /// ```dart
+  /// 1048576.toFileSize()       // '1.0 MB'
+  /// 1536.toFileSize()          // '1.5 KB'
+  /// 512.toFileSize()           // '512 B'
+  /// ```
+  String toFileSize({int decimals = 1}) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    var value = toDouble();
+    var unitIndex = 0;
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+    final formatted = unitIndex == 0
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(decimals);
+    return '$formatted ${units[unitIndex]}';
+  }
+
+  // ─── Duration ────────────────────────────────────────────────────────────────
+
+  /// Converts this number (seconds) to a [Duration].
+  ///
+  /// ```dart
+  /// 90.toDuration() // Duration(minutes: 1, seconds: 30)
+  /// ```
+  Duration toDuration() => Duration(microseconds: (toDouble() * 1e6).round());
+
+  // ─── Compact ─────────────────────────────────────────────────────────────────
+
+  /// Returns a compact string representation (K, M, B, T).
+  ///
+  /// ```dart
+  /// 1500000.toCompact()   // '1.5M'
+  /// 2300.toCompact()      // '2.3K'
+  /// 999.toCompact()       // '999'
+  /// ```
+  String toCompact({int decimals = 1}) {
+    final abs = this.abs();
+    final sign = this < 0 ? '-' : '';
+    if (abs >= 1e12) return '$sign${(abs / 1e12).toStringAsFixed(decimals)}T';
+    if (abs >= 1e9) return '$sign${(abs / 1e9).toStringAsFixed(decimals)}B';
+    if (abs >= 1e6) return '$sign${(abs / 1e6).toStringAsFixed(decimals)}M';
+    if (abs >= 1e3) return '$sign${(abs / 1e3).toStringAsFixed(decimals)}K';
+    return toString();
+  }
+
+  // ─── Number Theory ───────────────────────────────────────────────────────────
+
+  /// Returns the greatest common divisor of this and [other].
+  ///
+  /// ```dart
+  /// 12.gcd(8) // 4
+  /// ```
+  int gcd(int other) {
+    var a = toInt().abs();
+    var b = other.abs();
+    while (b != 0) {
+      final t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+
+  /// Returns the least common multiple of this and [other].
+  ///
+  /// ```dart
+  /// 4.lcm(6) // 12
+  /// ```
+  int lcm(int other) {
+    final a = toInt().abs();
+    final b = other.abs();
+    if (a == 0 || b == 0) return 0;
+    return (a ~/ gcd(b)) * b;
+  }
+
+  /// Returns `true` if this number is a Fibonacci number.
+  ///
+  /// ```dart
+  /// 13.isFibonacci // true
+  /// 14.isFibonacci // false
+  /// ```
+  bool get isFibonacci {
+    bool isPerfectSquare(int n) {
+      final s = math.sqrt(n).toInt();
+      return s * s == n;
+    }
+
+    final n = toInt();
+    if (n < 0) return false;
+    return isPerfectSquare(5 * n * n + 4) || isPerfectSquare(5 * n * n - 4);
+  }
+
+  // ─── Words ───────────────────────────────────────────────────────────────────
+
+  /// Converts this integer (0–999,999,999) to its English word representation.
+  ///
+  /// ```dart
+  /// 42.toWords()      // 'forty-two'
+  /// 1001.toWords()    // 'one thousand one'
+  /// ```
+  String toWords() {
+    final n = toInt();
+    if (n < 0) return 'negative ${(-n).toWords()}';
+    if (n == 0) return 'zero';
+    const ones = [
+      '',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten',
+      'eleven',
+      'twelve',
+      'thirteen',
+      'fourteen',
+      'fifteen',
+      'sixteen',
+      'seventeen',
+      'eighteen',
+      'nineteen',
+    ];
+    const tens = [
+      '',
+      '',
+      'twenty',
+      'thirty',
+      'forty',
+      'fifty',
+      'sixty',
+      'seventy',
+      'eighty',
+      'ninety',
+    ];
+    String helper(int num) {
+      if (num == 0) return '';
+      if (num < 20) return ones[num];
+      if (num < 100) {
+        final t = tens[num ~/ 10];
+        final o = ones[num % 10];
+        return o.isEmpty ? t : '$t-$o';
+      }
+      final rest = helper(num % 100);
+      return rest.isEmpty
+          ? '${ones[num ~/ 100]} hundred'
+          : '${ones[num ~/ 100]} hundred $rest';
+    }
+
+    final parts = <String>[];
+    if (n >= 1000000000) parts.add('${helper(n ~/ 1000000000)} billion');
+    if ((n ~/ 1000000) % 1000 != 0) {
+      parts.add('${helper((n ~/ 1000000) % 1000)} million');
+    }
+    if ((n ~/ 1000) % 1000 != 0) {
+      parts.add('${helper((n ~/ 1000) % 1000)} thousand');
+    }
+    if (n % 1000 != 0) parts.add(helper(n % 1000));
+    return parts.join(' ');
+  }
+
+  // ─── Safe Arithmetic ─────────────────────────────────────────────────────────
+
+  /// Divides this number by [divisor], returning [fallback] if divisor is zero.
+  ///
+  /// ```dart
+  /// 10.safeDivide(2)  // 5.0
+  /// 10.safeDivide(0)  // 0.0
+  /// ```
+  double safeDivide(num divisor, {double fallback = 0.0}) {
+    if (divisor == 0) return fallback;
+    return toDouble() / divisor.toDouble();
+  }
 }

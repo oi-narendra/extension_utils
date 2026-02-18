@@ -311,4 +311,126 @@ extension ListUtils<T> on List<T> {
     buf.write(suffix);
     return buf.toString();
   }
+
+  // ─── Safe Access ──────────────────────────────────────────────────────────────
+
+  /// Returns the first element satisfying [predicate], or `null` if none found.
+  ///
+  /// ```dart
+  /// [1, 2, 3].firstWhereOrNull((e) => e > 5) // null
+  /// ```
+  T? firstWhereOrNull(bool Function(T) predicate) {
+    for (final e in this) {
+      if (predicate(e)) return e;
+    }
+    return null;
+  }
+
+  /// Returns the last element, or `null` if the list is empty.
+  T? get lastOrNull => isEmpty ? null : last;
+
+  // ─── Intersperse / Pagination ───────────────────────────────────────────────────
+
+  /// Returns a new list with [separator] inserted between every element.
+  ///
+  /// ```dart
+  /// [1, 2, 3].intersperse(0) // [1, 0, 2, 0, 3]
+  /// ```
+  List<T> intersperse(T separator) {
+    if (length <= 1) return [...this];
+    final result = <T>[];
+    for (var i = 0; i < length; i++) {
+      result.add(this[i]);
+      if (i < length - 1) result.add(separator);
+    }
+    return result;
+  }
+
+  /// Returns a page of elements (1-indexed).
+  ///
+  /// ```dart
+  /// [1,2,3,4,5].page(1, 2) // [1, 2]
+  /// [1,2,3,4,5].page(2, 2) // [3, 4]
+  /// ```
+  List<T> page(int page, int pageSize) {
+    assert(page >= 1, 'page must be >= 1');
+    assert(pageSize > 0, 'pageSize must be > 0');
+    final start = (page - 1) * pageSize;
+    if (start >= length) return [];
+    return sublist(start, math.min(start + pageSize, length));
+  }
+
+  // ─── Set Operations ────────────────────────────────────────────────────────────
+
+  /// Returns a new list with duplicate elements removed (preserves order).
+  ///
+  /// ```dart
+  /// [1, 2, 1, 3, 2].distinct() // [1, 2, 3]
+  /// ```
+  List<T> distinct() {
+    final seen = <T>{};
+    return where(seen.add).toList();
+  }
+
+  /// Returns elements in this list that are NOT in [other].
+  ///
+  /// ```dart
+  /// [1, 2, 3, 4].difference([2, 4]) // [1, 3]
+  /// ```
+  List<T> difference(List<T> other) {
+    final otherSet = other.toSet();
+    return where((e) => !otherSet.contains(e)).toList();
+  }
+
+  /// Returns elements that appear in both this list and [other].
+  ///
+  /// ```dart
+  /// [1, 2, 3].intersection([2, 3, 4]) // [2, 3]
+  /// ```
+  List<T> intersection(List<T> other) {
+    final otherSet = other.toSet();
+    return where(otherSet.contains).toList();
+  }
+
+  // ─── Numeric Aggregation ───────────────────────────────────────────────────────
+
+  /// Returns the running cumulative sum of a `List<num>`.
+  ///
+  /// ```dart
+  /// [1, 2, 3, 4].cumulativeSum() // [1, 3, 6, 10]
+  /// ```
+  List<num> cumulativeSum() {
+    if (this is! List<num>) {
+      throw UnsupportedError('cumulativeSum is only supported on List<num>');
+    }
+    final nums = this as List<num>;
+    final result = <num>[];
+    num running = 0;
+    for (final e in nums) {
+      running += e;
+      result.add(running);
+    }
+    return result;
+  }
+
+  // ─── Grid / Matrix ──────────────────────────────────────────────────────────────
+
+  /// Transposes a `List<List<T>>` (rows become columns).
+  ///
+  /// ```dart
+  /// [[1,2,3],[4,5,6]].transpose() // [[1,4],[2,5],[3,6]]
+  /// ```
+  List<List<T>> transpose() {
+    if (this is! List<List<T>>) {
+      throw UnsupportedError('transpose requires a List<List<T>>');
+    }
+    final matrix = this as List<List<T>>;
+    if (matrix.isEmpty || matrix.first.isEmpty) return [];
+    final rows = matrix.length;
+    final cols = matrix.first.length;
+    return List.generate(
+      cols,
+      (c) => List.generate(rows, (r) => matrix[r][c]),
+    );
+  }
 }

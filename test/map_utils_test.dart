@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:extension_utils/map_utils.dart';
 
-
 void main() {
   group('MapUtils', () {
     // ─── Safe Access ────────────────────────────────────────────────────────
@@ -198,6 +197,73 @@ void main() {
         };
         expect(map.deepGet(['user', 'address', 'city']), isNull);
       });
+    });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('deepMerge', () {
+      test('merges nested maps', () {
+        final a = <String, dynamic>{
+          'a': <String, dynamic>{'x': 1}
+        };
+        final b = <String, dynamic>{
+          'a': <String, dynamic>{'y': 2}
+        };
+        final result = a.deepMerge(b);
+        expect((result['a'] as Map)['x'], 1);
+        expect((result['a'] as Map)['y'], 2);
+      });
+      test('other wins for non-map values', () {
+        final result = {'a': 1}.deepMerge({'a': 99});
+        expect(result['a'], 99);
+      });
+    });
+
+    group('compact', () {
+      test('removes null values', () {
+        expect({'a': 1, 'b': null, 'c': 3}.compact(), {'a': 1, 'c': 3});
+      });
+    });
+
+    group('renameKey', () {
+      test('renames key', () {
+        expect({'old': 1, 'b': 2}.renameKey('old', 'new'), {'new': 1, 'b': 2});
+      });
+      test('no-op when key absent', () {
+        expect({'a': 1}.renameKey('x', 'y'), {'a': 1});
+      });
+    });
+
+    group('diff', () {
+      test('returns changed entries', () {
+        expect({'a': 1, 'b': 2}.diff({'a': 1, 'b': 3}), {'b': 3});
+      });
+      test('returns new entries', () {
+        expect({'a': 1}.diff({'a': 1, 'b': 2}), {'b': 2});
+      });
+    });
+
+    group('pick', () {
+      test('picks specified keys', () {
+        expect({'a': 1, 'b': 2, 'c': 3}.pick(['a', 'c']), {'a': 1, 'c': 3});
+      });
+    });
+
+    group('omit', () {
+      test('omits specified keys', () {
+        expect({'a': 1, 'b': 2, 'c': 3}.omit(['b']), {'a': 1, 'c': 3});
+      });
+    });
+  });
+
+  group('mapFromQueryString', () {
+    test('parses simple query string', () {
+      expect(mapFromQueryString('page=1&q=hello'), {'page': '1', 'q': 'hello'});
+    });
+    test('handles leading ?', () {
+      expect(mapFromQueryString('?a=1&b=2'), {'a': '1', 'b': '2'});
+    });
+    test('empty string returns empty map', () {
+      expect(mapFromQueryString(''), isEmpty);
     });
   });
 }

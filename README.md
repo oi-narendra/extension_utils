@@ -2,23 +2,28 @@
 
 [![pub package](https://img.shields.io/pub/v/extension_utils.svg)](https://pub.dev/packages/extension_utils)
 
-A modern Dart/Flutter utility library providing practical extensions for `String`, `List`, `Map`, `num`, `DateTime`, `Duration`, `Color`, `Iterable`, and `Enum` types.
+A modern Dart/Flutter utility library providing practical extensions for `String`, `List`, `Map`, `num`, `DateTime`, `Duration`, `Color`, `Iterable`, `Enum`, `bool`, `Uri`, `Future`, `Object`, and `RegExp` types.
 
 Requires **Dart ≥ 3.3.0** and **Flutter ≥ 3.19.0**.
 
 ## Features
 
-| Extension | Description |
-|-----------|-------------|
-| `StringUtils` | Case conversion, validation, formatting, encoding |
-| `ListUtils` | Statistics, sorting, windowing, zipping, sampling |
-| `MapUtils` | Deep access, merging, key/value mapping, query strings |
-| `NumberUtils` | Math, formatting, numeral systems, ordinals |
-| `DateTimeUtils` | Boundaries, relative time, formatting, workday arithmetic |
-| `DurationUtils` | Human-readable formatting, `ago`/`fromNow` helpers |
-| `ColorUtils` | Lighten/darken, palettes, contrast, hex conversion |
-| `IterableUtils` | Safe access, aggregation, grouping, chunking |
-| `EnumUtils` | Pattern matching, human-readable labels |
+| Extension        | Description                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| `StringUtils`    | Case conversion, validation, formatting, encoding, NLP helpers |
+| `ListUtils`      | Statistics, sorting, windowing, zipping, pagination, set ops   |
+| `MapUtils`       | Deep access/merge, key/value mapping, query strings, diffing   |
+| `NumberUtils`    | Math, formatting, numeral systems, ordinals, file sizes        |
+| `DateTimeUtils`  | Boundaries, relative time, formatting, workday arithmetic      |
+| `DurationUtils`  | Human-readable formatting, arithmetic, countdown               |
+| `ColorUtils`     | Lighten/darken, palettes, contrast, accessibility, hex         |
+| `IterableUtils`  | Safe access, aggregation, grouping, chunking                   |
+| `EnumUtils`      | Pattern matching, human-readable labels                        |
+| `BoolUtils`      | Toggle, conditional helpers, pattern dispatch                  |
+| `UriUtils`       | Query params, path manipulation, scheme checks                 |
+| `FutureUtils`    | Retry, timeout, fallback                                       |
+| `ObjectUtils`    | Kotlin-style scope functions (`let`, `also`, `takeIf`)         |
+| `RegExpPatterns` | 14 pre-built common regex patterns                             |
 
 ## Installation
 
@@ -84,6 +89,23 @@ import 'package:extension_utils/extension_utils.dart';
 'hello world'.dropRight(6)            // 'hello'
 'hello world'.removePrefix('hello ')  // 'world'
 'hello world'.removeSuffix(' world')  // 'hello'
+// New in 2.1.0
+'hello world'.levenshteinDistance('hello')  // 6
+'kitten'.similarityTo('sitting')            // 0.57...
+'hello world'.toSentenceCase()              // 'Hello world'
+'hello world'.wordWrap(5)                   // 'hello\nworld'
+'price is 42.5'.extractNumbers()            // [42.5]
+'email me@example.com'.extractEmails()      // ['me@example.com']
+'visit https://dart.dev'.extractUrls()      // ['https://dart.dev']
+'  hello   world  '.compactWhitespace()     // 'hello world'
+'one two three'.truncateWords(2)            // 'one two...'
+'{"key": 1}'.tryParseJson()                 // {'key': 1}
+
+// Null-safe helpers (StringUtilsNullable)
+String? s;
+s.isNullOrEmpty   // true
+s.orEmpty         // ''
+s.orDefault('hi') // 'hi'
 ```
 
 ### List Extensions
@@ -125,6 +147,16 @@ import 'package:extension_utils/extension_utils.dart';
 
 // Joining
 [1, 2, 3].joinToString(', ')  // '1, 2, 3'
+// New in 2.1.0
+[1, 2, 3].firstWhereOrNull((n) => n > 5)  // null
+[1, 2, 3].lastOrNull                       // 3
+[1, 2, 3].intersperse(0)                   // [1, 0, 2, 0, 3]
+[1, 2, 3, 4, 5].page(pageSize: 2, page: 1) // [3, 4]
+[1, 2, 2, 3].distinct()                    // [1, 2, 3]
+[1, 2, 3].difference([2, 3, 4])            // [1]
+[1, 2, 3].intersection([2, 3, 4])          // [2, 3]
+[1, 2, 3].cumulativeSum()                  // [1, 3, 6]
+[[1, 2], [3, 4]].transpose()               // [[1, 3], [2, 4]]
 ```
 
 ### Map Extensions
@@ -155,6 +187,14 @@ import 'package:extension_utils/extension_utils.dart';
 
 // Flattening
 {'a': {'b': 1}}.flatten()  // {'a.b': 1}
+// New in 2.1.0
+{'a': 1}.deepMerge({'b': 2})               // {'a': 1, 'b': 2}
+{'a': 1, 'b': null}.compact()              // {'a': 1}
+{'a': 1}.renameKey('a', 'z')              // {'z': 1}
+{'a': 1, 'b': 2}.pick(['a'])              // {'a': 1}
+{'a': 1, 'b': 2}.omit(['b'])              // {'a': 1}
+{'a': 1}.diff({'a': 2, 'b': 3})           // {'a': [1, 2], 'b': [null, 3]}
+mapFromQueryString('q=dart&page=1')        // {'q': 'dart', 'page': '1'}
 ```
 
 ### Number Extensions
@@ -181,6 +221,16 @@ import 'package:extension_utils/extension_utils.dart';
 42.pad(5)                            // '00042'
 25.0.percentage(200)                 // 12.5
 1234.digitCount                      // 4
+// New in 2.1.0
+42.clampTo(0, 10)                // 10
+1024.toFileSize()                // '1.0 KB'
+90.toDuration()                  // Duration(minutes: 90) [seconds]
+1500000.toCompact()              // '1.5M'
+12.gcd(8)                        // 4
+12.lcm(8)                        // 24
+8.isFibonacci                    // true
+42.toWords()                     // 'forty two'
+10.safeDivide(0)                 // 0.0
 ```
 
 ### DateTime Extensions
@@ -216,6 +266,13 @@ DateTime.now().quarterOfYear     // 1–4
 DateTime.now().weekOfYear        // 1–53
 DateTime.now().season            // 'Spring', 'Summer', 'Autumn', 'Winter'
 DateTime.now().toUtcIso8601      // '2024-03-05T...'
+// New in 2.1.0
+DateTime.now().countdown()                   // Duration until/since now
+DateTime(2024, 3, 18, 10).isBusinessHours()  // true
+DateTime(2024, 2).daysInMonth                // 29 (leap year)
+DateTime(2024, 3, 15).copyWith(month: 6)     // DateTime(2024, 6, 15)
+DateTime.now().timezoneOffsetString          // '+10:00'
+DateTime(2024, 4).fiscalQuarter(4)           // 1 (fiscal year starts April)
 ```
 
 ### Duration Extensions
@@ -230,6 +287,11 @@ const Duration(days: 3).fromNow   // DateTime 3 days from now
 
 const Duration(days: 14).inWeeks  // 2
 const Duration.zero.isZero        // true
+// New in 2.1.0
+const Duration(hours: 1).multipliedBy(1.5)  // Duration(hours: 1, minutes: 30)
+const Duration(hours: 2).dividedBy(4)        // Duration(minutes: 30)
+const Duration(minutes: 30).percentageOf(const Duration(hours: 1)) // 50.0
+const Duration(minutes: 90).toCountdown()    // '01:30:00'
 ```
 
 ### Color Extensions
@@ -252,6 +314,75 @@ Colors.blue.triadic               // 3 triadic colors
 
 Colors.blue.toHex()               // '#FF2196F3'
 Colors.blue.toMaterialColor()     // MaterialColor swatch
+// New in 2.1.0
+Colors.black.contrastRatio(Colors.white)      // 21.0
+Colors.white.isAccessibleOn(Colors.black)     // true
+Colors.blue.splitComplementary                // [Color, Color]
+Colors.red.withOpacityPercent(50)             // Color with 50% opacity
+Colors.blue.shade(20)                         // 20% darker
+Colors.blue.tint(20)                          // 20% lighter
+```
+
+### Bool Extensions
+
+```dart
+true.toggled                    // false
+true.toYesNo()                  // 'Yes'
+false.toOnOff()                 // 'Off'
+true.toEnabledDisabled()        // 'Enabled'
+true.ifTrue('hello')            // 'hello'
+false.ifFalse('fallback')       // 'fallback'
+true.when(onTrue: () => 'yes', onFalse: () => 'no') // 'yes'
+```
+
+### URI Extensions
+
+```dart
+Uri.parse('https://example.com').isSecure          // true
+Uri.parse('https://example.com').appendPath('api') // https://example.com/api
+Uri.parse('https://example.com').withQueryParam('q', 'dart')
+// https://example.com?q=dart
+Uri.parse('https://example.com?q=dart').removeQueryParam('q')
+// https://example.com
+```
+
+### Future Utilities
+
+```dart
+// Retry a future factory up to N times
+final data = await retryFuture(() => fetchData(), times: 3,
+    delay: Duration(seconds: 1));
+
+// Timeout with fallback
+final result = await slowOperation()
+    .withTimeout(Duration(seconds: 5), fallback: defaultValue);
+
+// Fallback on error
+final safe = await riskyOperation().withFallback(defaultValue);
+```
+
+### Object Extensions
+
+```dart
+// Kotlin-style scope functions
+final upper = 'hello'.let((s) => s.toUpperCase()); // 'HELLO'
+
+final list = <int>[]
+  ..also((l) => l.addAll([1, 2, 3]));  // [1, 2, 3]
+
+final even = 4.takeIf((n) => n.isEven);   // 4
+final odd  = 3.takeIf((n) => n.isEven);   // null
+```
+
+### RegExp Patterns
+
+```dart
+RegExpPatterns.email.hasMatch('user@example.com')  // true
+RegExpPatterns.url.hasMatch('https://dart.dev')    // true
+RegExpPatterns.uuid.hasMatch('550e8400-e29b-...')  // true
+RegExpPatterns.hexColor.hasMatch('#FF5733')         // true
+RegExpPatterns.creditCard.hasMatch('4111111111111111') // true
+// Also: phone, ipv4, ipv6, postalCode, date, time, username, slug, htmlTag
 ```
 
 ### Iterable Extensions

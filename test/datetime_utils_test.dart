@@ -191,5 +191,72 @@ void main() {
       test('MMMM', () => expect(date.format('MMMM'), 'March'));
       test('EEE', () => expect(date.format('EEE'), 'Tue'));
     });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('countdown', () {
+      test('future date has positive countdown', () {
+        final future = DateTime.now().add(const Duration(hours: 1));
+        expect(future.countdown().isNegative, isFalse);
+      });
+      test('past date has negative countdown', () {
+        final past = DateTime.now().subtract(const Duration(hours: 1));
+        expect(past.countdown().isNegative, isTrue);
+      });
+    });
+
+    group('isBusinessHours', () {
+      test('weekday at 10am is business hours', () {
+        // 2024-03-18 is a Monday
+        expect(DateTime(2024, 3, 18, 10).isBusinessHours(), isTrue);
+      });
+      test('weekend is not business hours', () {
+        // 2024-03-16 is a Saturday
+        expect(DateTime(2024, 3, 16, 10).isBusinessHours(), isFalse);
+      });
+      test('before start hour is not business hours', () {
+        expect(DateTime(2024, 3, 18, 8).isBusinessHours(), isFalse);
+      });
+    });
+
+    group('daysInMonth', () {
+      test('January has 31 days', () => expect(DateTime(2024).daysInMonth, 31));
+      test('February 2024 has 29 days (leap)',
+          () => expect(DateTime(2024, 2).daysInMonth, 29));
+      test('February 2023 has 28 days',
+          () => expect(DateTime(2023, 2).daysInMonth, 28));
+      test(
+          'April has 30 days', () => expect(DateTime(2024, 4).daysInMonth, 30));
+    });
+
+    group('copyWith', () {
+      test('replaces month', () {
+        expect(DateTime(2024, 3, 15).copyWith(month: 6), DateTime(2024, 6, 15));
+      });
+      test('replaces year and day', () {
+        expect(DateTime(2024, 3, 15).copyWith(year: 2025, day: 1),
+            DateTime(2025, 3));
+      });
+    });
+
+    group('timezoneOffsetString', () {
+      test('returns non-empty string', () {
+        expect(DateTime.now().timezoneOffsetString, isNotEmpty);
+      });
+      test('contains colon separator', () {
+        expect(DateTime.now().timezoneOffsetString, contains(':'));
+      });
+    });
+
+    group('fiscalQuarter', () {
+      test('Q1 when fiscal year starts April', () {
+        expect(DateTime(2024, 4).fiscalQuarter(4), 1);
+      });
+      test('Q2 when fiscal year starts April', () {
+        expect(DateTime(2024, 7).fiscalQuarter(4), 2);
+      });
+      test('Q1 for calendar year (Jan)', () {
+        expect(DateTime(2024).fiscalQuarter(1), 1);
+      });
+    });
   });
 }

@@ -167,4 +167,75 @@ extension ColorUtils on Color {
 
   /// Returns the ARGB integer value of this color.
   int toArgb() => toARGB32();
+
+  // ─── Accessibility ──────────────────────────────────────────────────────────────
+
+  /// Returns the WCAG contrast ratio between this color and [other] (1–21).
+  ///
+  /// ```dart
+  /// Colors.black.contrastRatio(Colors.white) // 21.0
+  /// ```
+  double contrastRatio(Color other) {
+    final l1 = luminance + 0.05;
+    final l2 = other.luminance + 0.05;
+    return l1 > l2 ? l1 / l2 : l2 / l1;
+  }
+
+  /// Returns `true` if this color has sufficient contrast against [background]
+  /// for WCAG AA compliance (default ratio 4.5:1).
+  ///
+  /// ```dart
+  /// Colors.white.isAccessibleOn(Colors.blue) // true/false
+  /// ```
+  bool isAccessibleOn(Color background, {double minRatio = 4.5}) =>
+      contrastRatio(background) >= minRatio;
+
+  // ─── Extended Palettes ───────────────────────────────────────────────────────
+
+  /// Returns the two split-complementary colors (150° and 210° from this hue).
+  ///
+  /// ```dart
+  /// Colors.blue.splitComplementary // [Color, Color]
+  /// ```
+  List<Color> get splitComplementary {
+    final hsl = HSLColor.fromColor(this);
+    return [
+      hsl.withHue((hsl.hue + 150) % 360).toColor(),
+      hsl.withHue((hsl.hue + 210) % 360).toColor(),
+    ];
+  }
+
+  // ─── Opacity Helpers ────────────────────────────────────────────────────────
+
+  /// Returns a copy of this color with opacity set to [percent]% (0–100).
+  ///
+  /// ```dart
+  /// Colors.red.withOpacityPercent(50) // 50% transparent red
+  /// ```
+  Color withOpacityPercent(int percent) {
+    assert(percent >= 0 && percent <= 100, 'percent must be 0–100');
+    return withValues(alpha: percent / 100);
+  }
+
+  // ─── Shade / Tint ──────────────────────────────────────────────────────────────
+
+  /// Returns a shade of this color by mixing it with black by [level]% (0–100).
+  ///
+  /// ```dart
+  /// Colors.blue.shade(20) // 20% darker blue
+  /// ```
+  Color shade(int level) {
+    assert(level >= 0 && level <= 100, 'level must be 0–100');
+    return mix(const Color(0xFF000000), level / 100);
+  }
+
+  /// Returns a tint of this color by mixing it with white by [level]% (0–100).
+  ///
+  /// ```dart
+  /// Colors.blue.tint(20) // 20% lighter blue
+  /// ```
+  Color tint(int level) {
+    assert(level >= 0 && level <= 100, 'level must be 0–100');
+    return mix(const Color(0xFFFFFFFF), level / 100);
+  }
 }

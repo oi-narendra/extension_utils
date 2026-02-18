@@ -142,5 +142,63 @@ void main() {
       test('rounds to 2 decimals', () => expect(3.14159.roundTo(2), 3.14));
       test('rounds to 0 decimals', () => expect(3.7.roundTo(0), 4.0));
     });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('clampTo', () {
+      test('clamps to min', () => expect((-5).clampTo(0, 10), 0));
+      test('clamps to max', () => expect(15.clampTo(0, 10), 10));
+      test('within range', () => expect(5.clampTo(0, 10), 5));
+    });
+
+    group('toFileSize', () {
+      test('bytes', () => expect(500.toFileSize(), '500 B'));
+      test('kilobytes', () => expect(1024.toFileSize(), '1.0 KB'));
+      test('megabytes', () => expect((1024 * 1024).toFileSize(), '1.0 MB'));
+      test('gigabytes',
+          () => expect((1024 * 1024 * 1024).toFileSize(), '1.0 GB'));
+    });
+
+    group('toDuration', () {
+      test('converts seconds to Duration', () {
+        expect(90.toDuration(), const Duration(seconds: 90));
+      });
+    });
+
+    group('toCompact', () {
+      test('thousands', () => expect(1500.toCompact(), '1.5K'));
+      test('millions', () => expect(2500000.toCompact(), '2.5M'));
+      test('small number', () => expect(999.toCompact(), '999'));
+    });
+
+    group('gcd', () {
+      test('gcd(12, 8) = 4', () => expect(12.gcd(8), 4));
+      test('gcd(7, 3) = 1', () => expect(7.gcd(3), 1));
+    });
+
+    group('lcm', () {
+      test('lcm(4, 6) = 12', () => expect(4.lcm(6), 12));
+    });
+
+    group('isFibonacci', () {
+      test('0 is Fibonacci', () => expect(0.isFibonacci, isTrue));
+      test('1 is Fibonacci', () => expect(1.isFibonacci, isTrue));
+      test('8 is Fibonacci', () => expect(8.isFibonacci, isTrue));
+      test('4 is not Fibonacci', () => expect(4.isFibonacci, isFalse));
+    });
+
+    group('toWords', () {
+      test('zero', () => expect(0.toWords(), 'zero'));
+      test('one', () => expect(1.toWords(), 'one'));
+      test('twenty one', () => expect(21.toWords(), 'twenty-one'));
+      test('one hundred', () => expect(100.toWords(), 'one hundred'));
+    });
+
+    group('safeDivide', () {
+      test('normal division', () => expect(10.safeDivide(2), 5.0));
+      test('divide by zero returns fallback',
+          () => expect(10.safeDivide(0), 0.0));
+      test('custom fallback',
+          () => expect(10.safeDivide(0, fallback: -1), -1.0));
+    });
   });
 }

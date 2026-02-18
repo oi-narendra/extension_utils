@@ -238,4 +238,122 @@ extension MapUtils<K, V> on Map<K, V> {
     }
     return current;
   }
+
+  // ─── Deep Operations ──────────────────────────────────────────────────────────
+
+  /// Recursively merges [other] into this map.
+  /// For duplicate keys, if both values are Maps they are merged recursively;
+  /// otherwise [other]'s value wins.
+  ///
+  /// ```dart
+  /// {'a': {'x': 1}}.deepMerge({'a': {'y': 2}}) // {'a': {'x': 1, 'y': 2}}
+  /// ```
+  Map<K, V> deepMerge(Map<K, V> other) {
+    final result = Map<K, V>.from(this);
+    for (final e in other.entries) {
+      if (result.containsKey(e.key) && result[e.key] is Map && e.value is Map) {
+        result[e.key] = (result[e.key] as Map).deepMerge(e.value as Map) as V;
+      } else {
+        result[e.key] = e.value;
+      }
+    }
+    return result;
+  }
+
+  /// Sets a deeply nested value at [path], creating intermediate maps as needed.
+  ///
+  /// ```dart
+  /// <String, dynamic>{}.deepSet(['user', 'name'], 'Alice')
+  /// // {'user': {'name': 'Alice'}}
+  /// ```
+  Map<String, dynamic> deepSet(List<String> path, dynamic value) {
+    if (path.isEmpty) return this as Map<String, dynamic>;
+    final result = Map<String, dynamic>.from(this as Map);
+    Map<String, dynamic> current = result;
+    for (var i = 0; i < path.length - 1; i++) {
+      final key = path[i];
+      if (current[key] is! Map) {
+        current[key] = <String, dynamic>{};
+      }
+      current = Map<String, dynamic>.from(current[key] as Map);
+      result[path[i]] = current;
+    }
+    current[path.last] = value;
+    return result;
+  }
+
+  // ─── Compact / Rename / Diff ───────────────────────────────────────────────────
+
+  /// Returns a new map with null values removed.
+  ///
+  /// ```dart
+  /// {'a': 1, 'b': null, 'c': 3}.compact() // {'a': 1, 'c': 3}
+  /// ```
+  Map<K, V> compact() => Map.fromEntries(entries.where((e) => e.value != null));
+
+  /// Returns a new map with the key [from] renamed to [to].
+  ///
+  /// ```dart
+  /// {'old': 1}.renameKey('old', 'new') // {'new': 1}
+  /// ```
+  Map<K, V> renameKey(K from, K to) {
+    if (!containsKey(from)) return Map.from(this);
+    final result = Map<K, V>.from(this);
+    result[to] = result.remove(from) as V;
+    return result;
+  }
+
+  /// Returns entries in this map whose values differ from [other].
+  /// Includes keys present in this map but absent in [other].
+  ///
+  /// ```dart
+  /// {'a': 1, 'b': 2}.diff({'a': 1, 'b': 3}) // {'b': 3}
+  /// ```
+  Map<K, V> diff(Map<K, V> other) {
+    final result = <K, V>{};
+    for (final e in other.entries) {
+      if (!containsKey(e.key) || this[e.key] != e.value) {
+        result[e.key] = e.value;
+      }
+    }
+    return result;
+  }
+
+  // ─── Pick / Omit ───────────────────────────────────────────────────────────────
+
+  /// Returns a new map containing only the specified [keys].
+  ///
+  /// ```dart
+  /// {'a': 1, 'b': 2, 'c': 3}.pick(['a', 'c']) // {'a': 1, 'c': 3}
+  /// ```
+  Map<K, V> pick(List<K> keys) => filterKeys(keys);
+
+  /// Returns a new map with the specified [keys] removed.
+  ///
+  /// ```dart
+  /// {'a': 1, 'b': 2, 'c': 3}.omit(['b']) // {'a': 1, 'c': 3}
+  /// ```
+  Map<K, V> omit(List<K> keys) => rejectKeys(keys);
+}
+
+/// Parses a URL query string into a `Map<String, String>`.
+///
+/// ```dart
+/// mapFromQueryString('page=1&q=hello') // {'page': '1', 'q': 'hello'}
+/// ```
+Map<String, String> mapFromQueryString(String query) {
+  if (query.isEmpty) return {};
+  final q = query.startsWith('?') ? query.substring(1) : query;
+  return Map.fromEntries(
+    q.split('&').where((p) => p.isNotEmpty).map((pair) {
+      final idx = pair.indexOf('=');
+      if (idx == -1) {
+        return MapEntry(Uri.decodeQueryComponent(pair), '');
+      }
+      return MapEntry(
+        Uri.decodeQueryComponent(pair.substring(0, idx)),
+        Uri.decodeQueryComponent(pair.substring(idx + 1)),
+      );
+    }),
+  );
 }

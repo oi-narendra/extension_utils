@@ -81,5 +81,60 @@ void main() {
               '65:10'));
       test('zero duration', () => expect(Duration.zero.toMmSs(), '00:00'));
     });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('multipliedBy', () {
+      test('multiplies duration by fractional factor', () {
+        expect(
+          const Duration(hours: 1).multipliedBy(1.5),
+          const Duration(hours: 1, minutes: 30),
+        );
+      });
+      test('multiplies by integer factor', () {
+        expect(
+          const Duration(minutes: 10).multipliedBy(3),
+          const Duration(minutes: 30),
+        );
+      });
+    });
+
+    group('dividedBy', () {
+      test('divides duration', () {
+        expect(
+          const Duration(hours: 2).dividedBy(4),
+          const Duration(minutes: 30),
+        );
+      });
+      test('divide by zero throws', () {
+        expect(
+          () => const Duration(hours: 1).dividedBy(0),
+          throwsArgumentError,
+        );
+      });
+    });
+
+    group('percentageOf', () {
+      test('50% of 1 hour', () {
+        expect(
+          const Duration(minutes: 30).percentageOf(const Duration(hours: 1)),
+          0.5,
+        );
+      });
+      test('zero total returns 0', () {
+        expect(const Duration(minutes: 30).percentageOf(Duration.zero), 0.0);
+      });
+    });
+
+    group('toCountdown', () {
+      test('days and hours', () {
+        expect(const Duration(days: 2, hours: 3).toCountdown(), '2d 3h 0m 0s');
+      });
+      test('only minutes and seconds', () {
+        expect(const Duration(minutes: 5, seconds: 30).toCountdown(), '5m 30s');
+      });
+      test('zero', () {
+        expect(Duration.zero.toCountdown(), '0m 0s');
+      });
+    });
   });
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -517,4 +518,175 @@ extension StringUtils on String {
 
   /// Converts this string to a variable name (camelCase, no special chars).
   String variablize() => uncapitalize().replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+
+  // ─── Fuzzy / Distance ────────────────────────────────────────────────────────
+
+  /// Returns the Levenshtein edit distance between this string and [other].
+  ///
+  /// ```dart
+  /// 'kitten'.levenshteinDistance('sitting') // 3
+  /// ```
+  int levenshteinDistance(String other) {
+    if (isEmpty) return other.length;
+    if (other.isEmpty) return length;
+    final a = this, b = other;
+    final rows =
+        List.generate(a.length + 1, (i) => List.filled(b.length + 1, 0));
+    for (var i = 0; i <= a.length; i++) {
+      rows[i][0] = i;
+    }
+    for (var j = 0; j <= b.length; j++) {
+      rows[0][j] = j;
+    }
+    for (var i = 1; i <= a.length; i++) {
+      for (var j = 1; j <= b.length; j++) {
+        final cost = a[i - 1] == b[j - 1] ? 0 : 1;
+        rows[i][j] = math.min(
+          math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1),
+          rows[i - 1][j - 1] + cost,
+        );
+      }
+    }
+    return rows[a.length][b.length];
+  }
+
+  /// Returns a similarity score between 0.0 (completely different) and 1.0
+  /// (identical), based on Levenshtein distance.
+  ///
+  /// ```dart
+  /// 'hello'.similarityTo('hello') // 1.0
+  /// 'kitten'.similarityTo('sitting') // ~0.57
+  /// ```
+  double similarityTo(String other) {
+    if (this == other) return 1.0;
+    if (isEmpty && other.isEmpty) return 1.0;
+    final maxLen = math.max(length, other.length);
+    if (maxLen == 0) return 1.0;
+    return 1.0 - levenshteinDistance(other) / maxLen;
+  }
+
+  // ─── Text Utilities ──────────────────────────────────────────────────────────
+
+  /// Wraps this string at [maxWidth] characters, breaking at word boundaries.
+  ///
+  /// ```dart
+  /// 'Hello World Foo'.wordWrap(7) // 'Hello\nWorld\nFoo'
+  /// ```
+  String wordWrap(int maxWidth) {
+    assert(maxWidth > 0, 'maxWidth must be > 0');
+    final words = split(' ');
+    final lines = <String>[];
+    final current = StringBuffer();
+    for (final word in words) {
+      if (current.isEmpty) {
+        current.write(word);
+      } else if (current.length + 1 + word.length <= maxWidth) {
+        current.write(' $word');
+      } else {
+        lines.add(current.toString());
+        current.clear();
+        current.write(word);
+      }
+    }
+    if (current.isNotEmpty) lines.add(current.toString());
+    return lines.join('\n');
+  }
+
+  /// Converts this string to sentence case (first letter uppercase, rest lower).
+  ///
+  /// ```dart
+  /// 'hELLO wORLD'.toSentenceCase() // 'Hello world'
+  /// ```
+  String toSentenceCase() {
+    if (isEmpty) return '';
+    return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
+  }
+
+  /// Extracts all numbers (int and double) from this string.
+  ///
+  /// ```dart
+  /// '\$12.5 off, save 3 items'.extractNumbers() // [12.5, 3]
+  /// ```
+  List<num> extractNumbers() {
+    final matches = RegExp(r'-?\d+\.?\d*').allMatches(this);
+    return matches.map((m) => num.parse(m[0]!)).toList();
+  }
+
+  /// Extracts all email addresses from this string.
+  ///
+  /// ```dart
+  /// 'Contact us at foo@bar.com or baz@qux.io'.extractEmails()
+  /// // ['foo@bar.com', 'baz@qux.io']
+  /// ```
+  List<String> extractEmails() {
+    final re = RegExp(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}');
+    return re.allMatches(this).map((m) => m[0]!).toList();
+  }
+
+  /// Extracts all http/https URLs from this string.
+  ///
+  /// ```dart
+  /// 'Visit https://flutter.dev or http://dart.dev'.extractUrls()
+  /// // ['https://flutter.dev', 'http://dart.dev']
+  /// ```
+  List<String> extractUrls() {
+    final re = RegExp(r'https?://[^\s]+', caseSensitive: false);
+    return re.allMatches(this).map((m) => m[0]!).toList();
+  }
+
+  /// Replaces all runs of whitespace with a single space and trims.
+  ///
+  /// ```dart
+  /// '  hello   world  '.compactWhitespace() // 'hello world'
+  /// ```
+  String compactWhitespace() => trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Truncates this string to [maxWords] words, appending [ellipsis] if
+  /// truncation occurs.
+  ///
+  /// ```dart
+  /// 'The quick brown fox'.truncateWords(3) // 'The quick brown…'
+  /// ```
+  String truncateWords(int maxWords, {String ellipsis = '…'}) {
+    if (isEmpty) return '';
+    final words = trim().split(RegExp(r'\s+'));
+    if (words.length <= maxWords) return this;
+    return '${words.take(maxWords).join(' ')}$ellipsis';
+  }
+
+  /// Tries to parse this string as JSON. Returns `null` on failure.
+  ///
+  /// ```dart
+  /// '{"key":"value"}'.tryParseJson() // {'key': 'value'}
+  /// 'not json'.tryParseJson()        // null
+  /// ```
+  dynamic tryParseJson() {
+    try {
+      return jsonDecode(this);
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+/// Null-safe extensions on [String?].
+extension StringUtilsNullable on String? {
+  /// Returns `true` if this string is null or empty.
+  bool get isNullOrEmpty => this == null || this!.isEmpty;
+
+  /// Returns `true` if this string is null, empty, or contains only whitespace.
+  bool get isNullOrBlank => this == null || this!.trim().isEmpty;
+
+  /// Returns this string, or `''` if null.
+  String get orEmpty => this ?? '';
+
+  /// Returns this string, or [fallback] if null or empty.
+  ///
+  /// ```dart
+  /// null.orDefault('guest') // 'guest'
+  /// ''.orDefault('guest')   // 'guest'
+  /// 'john'.orDefault('guest') // 'john'
+  /// ```
+  String orDefault(String fallback) =>
+      (this == null || this!.isEmpty) ? fallback : this!;
 }

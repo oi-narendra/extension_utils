@@ -259,5 +259,60 @@ void main() {
           () => expect([1, 2, 3].joinToString(', ', transform: (e) => 'x$e'),
               'x1, x2, x3'));
     });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('firstWhereOrNull', () {
+      test('returns matching element', () {
+        expect([1, 2, 3].firstWhereOrNull((e) => e > 1), 2);
+      });
+      test('returns null when not found', () {
+        expect([1, 2, 3].firstWhereOrNull((e) => e > 5), isNull);
+      });
+    });
+
+    group('lastOrNull', () {
+      test('returns last element', () => expect([1, 2, 3].lastOrNull, 3));
+      test('returns null for empty list',
+          () => expect(<int>[].lastOrNull, isNull));
+    });
+
+    group('intersperse', () {
+      test('inserts separator between elements', () {
+        expect([1, 2, 3].intersperse(0), [1, 0, 2, 0, 3]);
+      });
+      test('single element unchanged', () {
+        expect([1].intersperse(0), [1]);
+      });
+    });
+
+    group('page', () {
+      test('first page', () => expect([1, 2, 3, 4, 5].page(1, 2), [1, 2]));
+      test('second page', () => expect([1, 2, 3, 4, 5].page(2, 2), [3, 4]));
+      test('page beyond length', () => expect([1, 2].page(3, 2), []));
+    });
+
+    group('distinct', () {
+      test('removes duplicates preserving order', () {
+        expect([1, 2, 1, 3, 2].distinct(), [1, 2, 3]);
+      });
+    });
+
+    group('difference', () {
+      test('returns elements not in other', () {
+        expect([1, 2, 3, 4].difference([2, 4]), [1, 3]);
+      });
+    });
+
+    group('intersection', () {
+      test('returns common elements', () {
+        expect([1, 2, 3].intersection([2, 3, 4]), [2, 3]);
+      });
+    });
+
+    group('cumulativeSum', () {
+      test('running sum', () {
+        expect([1.0, 2.0, 3.0, 4.0].cumulativeSum(), [1.0, 3.0, 6.0, 10.0]);
+      });
+    });
   });
 }

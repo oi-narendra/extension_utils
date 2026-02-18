@@ -264,5 +264,125 @@ void main() {
           () => expect('<b>Hello & "World"</b>'.toHtmlText(),
               '&lt;b&gt;Hello &amp; &quot;World&quot;&lt;/b&gt;'));
     });
+
+    // ─── New Methods ─────────────────────────────────────────────────────────
+    group('levenshteinDistance', () {
+      test('identical strings',
+          () => expect('hello'.levenshteinDistance('hello'), 0));
+      test('single substitution',
+          () => expect('cat'.levenshteinDistance('cut'), 1));
+      test('empty target', () => expect('hello'.levenshteinDistance(''), 5));
+      test('empty source', () => expect(''.levenshteinDistance('hello'), 5));
+    });
+
+    group('similarityTo', () {
+      test('identical strings',
+          () => expect('hello'.similarityTo('hello'), 1.0));
+      test(
+          'completely different', () => expect('abc'.similarityTo('xyz'), 0.0));
+      test('partial similarity', () {
+        final s = 'kitten'.similarityTo('sitting');
+        expect(s, greaterThan(0.0));
+        expect(s, lessThan(1.0));
+      });
+    });
+
+    group('wordWrap', () {
+      test('wraps at width', () {
+        final result = 'Hello World Foo'.wordWrap(10);
+        expect(result, 'Hello\nWorld Foo');
+      });
+      test('short string unchanged', () {
+        expect('Hi'.wordWrap(10), 'Hi');
+      });
+    });
+
+    group('toSentenceCase', () {
+      test('capitalizes first, lowercases rest', () {
+        expect('hELLO wORLD'.toSentenceCase(), 'Hello world');
+      });
+      test('empty string', () => expect(''.toSentenceCase(), ''));
+    });
+
+    group('extractNumbers', () {
+      test('extracts numbers', () {
+        expect('abc 123 def 45.6'.extractNumbers(), [123.0, 45.6]);
+      });
+      test('no numbers', () => expect('hello'.extractNumbers(), isEmpty));
+    });
+
+    group('extractEmails', () {
+      test('extracts emails', () {
+        expect(
+          'contact user@example.com and admin@test.org'.extractEmails(),
+          ['user@example.com', 'admin@test.org'],
+        );
+      });
+    });
+
+    group('extractUrls', () {
+      test('extracts URLs', () {
+        final urls =
+            'Visit https://flutter.dev and http://dart.dev'.extractUrls();
+        expect(urls, contains('https://flutter.dev'));
+        expect(urls, contains('http://dart.dev'));
+      });
+    });
+
+    group('compactWhitespace', () {
+      test('collapses multiple spaces', () {
+        expect('hello   world  foo'.compactWhitespace(), 'hello world foo');
+      });
+      test('trims edges', () {
+        expect('  hello  '.compactWhitespace(), 'hello');
+      });
+    });
+
+    group('truncateWords', () {
+      test('truncates to word count', () {
+        expect('one two three four five'.truncateWords(3), 'one two three…');
+      });
+      test('fewer words than limit', () {
+        expect('one two'.truncateWords(5), 'one two');
+      });
+    });
+
+    group('tryParseJson', () {
+      test('parses valid JSON', () {
+        expect('{"key":"value"}'.tryParseJson(), {'key': 'value'});
+      });
+      test('returns null for invalid JSON', () {
+        expect('not json'.tryParseJson(), isNull);
+      });
+    });
+  });
+
+  group('StringUtilsNullable', () {
+    group('isNullOrEmpty', () {
+      test('null is null or empty',
+          () => expect((null as String?).isNullOrEmpty, isTrue));
+      test('empty is null or empty', () => expect(''.isNullOrEmpty, isTrue));
+      test('non-empty is not', () => expect('hello'.isNullOrEmpty, isFalse));
+    });
+
+    group('isNullOrBlank', () {
+      test('null is null or blank',
+          () => expect((null as String?).isNullOrBlank, isTrue));
+      test('whitespace is null or blank',
+          () => expect('   '.isNullOrBlank, isTrue));
+      test('non-blank is not', () => expect('hello'.isNullOrBlank, isFalse));
+    });
+
+    group('orEmpty', () {
+      test('null returns empty', () => expect((null as String?).orEmpty, ''));
+      test('non-null returns value', () => expect('hello'.orEmpty, 'hello'));
+    });
+
+    group('orDefault', () {
+      test('null returns default',
+          () => expect((null as String?).orDefault('fallback'), 'fallback'));
+      test('non-null returns value',
+          () => expect('hello'.orDefault('fallback'), 'hello'));
+    });
   });
 }

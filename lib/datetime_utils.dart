@@ -349,4 +349,81 @@ extension DateTimeUtils on DateTime {
 
   /// Returns a UTC ISO 8601 string suitable for API payloads.
   String get toUtcIso8601 => toUtc().toIso8601String();
+
+  // ─── Countdown / Business ────────────────────────────────────────────────────
+
+  /// Returns the [Duration] from now until this date.
+  /// Negative if this date is in the past.
+  ///
+  /// ```dart
+  /// someEvent.countdown() // Duration(days: 3, hours: 2, ...)
+  /// ```
+  Duration countdown() => difference(DateTime.now());
+
+  /// Returns `true` if the current time falls within business hours.
+  ///
+  /// ```dart
+  /// DateTime.now().isBusinessHours() // true (if between 09:00–17:00 on weekday)
+  /// ```
+  bool isBusinessHours({int startHour = 9, int endHour = 17}) =>
+      isWeekday && hour >= startHour && hour < endHour;
+
+  // ─── Calendar Helpers ─────────────────────────────────────────────────────
+
+  /// Returns the number of days in this date's month.
+  ///
+  /// ```dart
+  /// DateTime(2024, 2).daysInMonth // 29 (leap year)
+  /// DateTime(2023, 2).daysInMonth // 28
+  /// ```
+  int get daysInMonth =>
+      DateTime(year, month + 1).subtract(const Duration(days: 1)).day;
+
+  /// Returns a copy of this [DateTime] with the given fields replaced.
+  ///
+  /// ```dart
+  /// DateTime(2024, 3, 15).copyWith(month: 6) // DateTime(2024, 6, 15)
+  /// ```
+  DateTime copyWith({
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+  }) =>
+      DateTime(
+        year ?? this.year,
+        month ?? this.month,
+        day ?? this.day,
+        hour ?? this.hour,
+        minute ?? this.minute,
+        second ?? this.second,
+        millisecond ?? this.millisecond,
+        microsecond ?? this.microsecond,
+      );
+
+  /// Returns the UTC offset as a string, e.g. `"+05:30"` or `"-08:00"`.
+  String get timezoneOffsetString {
+    final offset = timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final h = offset.inHours.abs().toString().padLeft(2, '0');
+    final m = offset.inMinutes.abs().remainder(60).toString().padLeft(2, '0');
+    return '$sign$h:$m';
+  }
+
+  /// Returns the fiscal quarter (1–4) given a fiscal year start month.
+  ///
+  /// ```dart
+  /// DateTime(2024, 4, 1).fiscalQuarter(4) // 1  (fiscal year starts April)
+  /// DateTime(2024, 7, 1).fiscalQuarter(4) // 2
+  /// ```
+  int fiscalQuarter(int fiscalYearStartMonth) {
+    assert(fiscalYearStartMonth >= 1 && fiscalYearStartMonth <= 12,
+        'fiscalYearStartMonth must be 1–12');
+    final adjusted = (month - fiscalYearStartMonth + 12) % 12;
+    return adjusted ~/ 3 + 1;
+  }
 }

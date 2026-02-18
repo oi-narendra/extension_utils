@@ -76,4 +76,57 @@ extension DurationUtils on Duration {
     final s = abs.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '${isNegative ? '-' : ''}$m:$s';
   }
+
+  // ─── Arithmetic ─────────────────────────────────────────────────────────────────
+
+  /// Multiplies this duration by [factor] and returns a new [Duration].
+  ///
+  /// Note: Dart's built-in `Duration * int` operator only accepts integers.
+  /// Use this method for fractional multiplication.
+  ///
+  /// ```dart
+  /// const Duration(hours: 1).multipliedBy(1.5) // Duration(hours: 1, minutes: 30)
+  /// ```
+  Duration multipliedBy(double factor) =>
+      Duration(microseconds: (inMicroseconds * factor).round());
+
+  /// Divides this duration by [factor] and returns a new [Duration].
+  ///
+  /// ```dart
+  /// const Duration(hours: 2).dividedBy(4) // Duration(minutes: 30)
+  /// ```
+  Duration dividedBy(double factor) {
+    if (factor == 0) throw ArgumentError('Cannot divide Duration by zero');
+    return Duration(microseconds: (inMicroseconds / factor).round());
+  }
+
+  /// Returns this duration as a percentage (0.0–1.0+) of [total].
+  ///
+  /// ```dart
+  /// const Duration(minutes: 30).percentageOf(const Duration(hours: 1)) // 0.5
+  /// ```
+  double percentageOf(Duration total) {
+    if (total.inMicroseconds == 0) return 0;
+    return inMicroseconds / total.inMicroseconds;
+  }
+
+  /// Returns a human-readable countdown string, e.g. `"2d 3h 45m 10s"`.
+  /// Omits zero-value units except seconds.
+  ///
+  /// ```dart
+  /// const Duration(days: 2, hours: 3).toCountdown() // '2d 3h 0m 0s'
+  /// ```
+  String toCountdown() {
+    final abs = this.abs();
+    final d = abs.inDays;
+    final h = abs.inHours.remainder(24);
+    final m = abs.inMinutes.remainder(60);
+    final s = abs.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('${d}d');
+    if (d > 0 || h > 0) parts.add('${h}h');
+    parts.add('${m}m');
+    parts.add('${s}s');
+    return '${isNegative ? '-' : ''}${parts.join(' ')}';
+  }
 }
