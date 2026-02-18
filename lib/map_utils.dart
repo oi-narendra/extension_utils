@@ -1,19 +1,184 @@
 import 'package:extension_utils/string_utils.dart';
-import 'package:flutter/foundation.dart';
 
 import 'model/pair.dart';
 
-extension MapUtils on Map {
-  /// Returns `true` if the map is empty, `false` otherwise.
-  bool get isEmpty => length == 0;
+/// Extensions on [Map] for real-world utility operations.
+extension MapUtils<K, V> on Map<K, V> {
+  // ─── Safe Access ─────────────────────────────────────────────────────────────
 
-  /// Returns `true` if the map contains the specified [key] and [value], `false` otherwise.
-  bool contains(Object key, Object value) =>
-      containsKey(key) && this[key] == value;
+  /// Returns the value for [key], or [defaultValue] if the key is absent.
+  ///
+  /// ```dart
+  /// {'a': 1}.getOrDefault('b', 0) // 0
+  /// ```
+  V getOrDefault(K key, V defaultValue) => this[key] ?? defaultValue;
 
-  /// Returns `true` if the map contains the specified
-  /// [key] and [value] and removes the entry, `false` otherwise.
-  bool removeExact({required Object key, required Object value}) {
+  /// Returns the value for [key]. If absent, computes it with [compute],
+  /// stores it, and returns it.
+  ///
+  /// ```dart
+  /// final cache = <String, int>{};
+  /// cache.getOrPut('key', () => expensiveCompute()); // computes once
+  /// ```
+  V getOrPut(K key, V Function() compute) {
+    if (!containsKey(key)) this[key] = compute();
+    return this[key] as V;
+  }
+
+  // ─── Filtering ───────────────────────────────────────────────────────────────
+
+  /// Returns a new map with entries satisfying [predicate].
+  Map<K, V> filter(bool Function(K key, V value) predicate) =>
+      Map.fromEntries(entries.where((e) => predicate(e.key, e.value)));
+
+  /// Returns a new map with entries NOT satisfying [predicate].
+  Map<K, V> reject(bool Function(K key, V value) predicate) =>
+      Map.fromEntries(entries.where((e) => !predicate(e.key, e.value)));
+
+  /// Returns a new map with only the specified [keys].
+  Map<K, V> filterKeys(Iterable<K> keys) => {
+        for (final k in keys)
+          if (containsKey(k)) k: this[k] as V
+      };
+
+  /// Returns a new map excluding the specified [keys].
+  Map<K, V> rejectKeys(Iterable<K> keys) =>
+      Map.fromEntries(entries.where((e) => !keys.contains(e.key)));
+
+  /// Returns a new map keeping only entries whose value is in [values].
+  Map<K, V> filterValues(Iterable<V> values) =>
+      Map.fromEntries(entries.where((e) => values.contains(e.value)));
+
+  /// Returns a new map excluding entries whose value is in [values].
+  Map<K, V> rejectValues(Iterable<V> values) =>
+      Map.fromEntries(entries.where((e) => !values.contains(e.value)));
+
+  /// Returns a new map with null values removed.
+  Map<K, V> filterNull() =>
+      Map.fromEntries(entries.where((e) => e.value != null));
+
+  /// Returns a new map with null and empty-string values removed.
+  Map<K, V> filterEmpty() => Map.fromEntries(
+        entries.where((e) => e.value != null && e.value.toString().isNotEmpty),
+      );
+
+  // ─── Transformation ──────────────────────────────────────────────────────────
+
+  /// Returns a new map with keys transformed by [f].
+  Map<K2, V> mapKeys<K2>(K2 Function(K key) f) =>
+      {for (final e in entries) f(e.key): e.value};
+
+  /// Returns a new map with values transformed by [f].
+  Map<K, V2> mapValues<V2>(V2 Function(V value) f) =>
+      {for (final e in entries) e.key: f(e.value)};
+
+  /// Returns a new map with keys and values swapped.
+  /// If duplicate values exist, later entries win.
+  Map<V, K> invertMap() => {for (final e in entries) e.value: e.key};
+
+  /// Merges this map with [other]. For duplicate keys, [resolve] determines
+  /// the winner (defaults to [other]'s value).
+  Map<K, V> mergeWith(
+    Map<K, V> other, {
+    V Function(V existing, V incoming)? resolve,
+  }) {
+    final result = Map<K, V>.from(this);
+    for (final e in other.entries) {
+      result[e.key] = (resolve != null && result.containsKey(e.key))
+          ? resolve(result[e.key] as V, e.value)
+          : e.value;
+    }
+    return result;
+  }
+
+  /// Removes duplicate values, keeping the first occurrence.
+  Map<K, V> uniqueValues() {
+    final seen = <V>{};
+    return Map.fromEntries(entries.where((e) => seen.add(e.value)));
+  }
+
+  // ─── Key Casing ──────────────────────────────────────────────────────────────
+
+  /// Returns a new map with all string keys prefixed by [prefix].
+  Map<String, V> prefixKeys(String prefix) =>
+      {for (final e in entries) '$prefix${e.key}': e.value};
+
+  /// Returns a new map with all string keys suffixed by [suffix].
+  Map<String, V> suffixKeys(String suffix) =>
+      {for (final e in entries) '${e.key}$suffix': e.value};
+
+  /// Returns a new map with all string keys capitalized.
+  Map<String, V> capitalizeKeys() =>
+      {for (final e in entries) e.key.toString().capitalize(): e.value};
+
+  /// Returns a new map with all string keys converted to camelCase.
+  Map<String, V> camelCaseKeys() =>
+      {for (final e in entries) e.key.toString().toCamelCase(): e.value};
+
+  /// Returns a new map with all string keys converted to snake_case.
+  Map<String, V> snakeCaseKeys() =>
+      {for (final e in entries) e.key.toString().toSnakeCase(): e.value};
+
+  /// Returns a new map with all string keys converted to kebab-case.
+  Map<String, V> kebabCaseKeys() =>
+      {for (final e in entries) e.key.toString().toKebabCase(): e.value};
+
+  // ─── Value Casing ────────────────────────────────────────────────────────────
+
+  /// Returns a new map with all values prefixed by [prefix].
+  Map<K, String> prefixValues(String prefix) =>
+      {for (final e in entries) e.key: '$prefix${e.value}'};
+
+  /// Returns a new map with all values suffixed by [suffix].
+  Map<K, String> suffixValues(String suffix) =>
+      {for (final e in entries) e.key: '${e.value}$suffix'};
+
+  /// Returns a new map with all values capitalized.
+  Map<K, String> capitalizeValues() =>
+      {for (final e in entries) e.key: e.value.toString().capitalize()};
+
+  /// Returns a new map with all values converted to camelCase.
+  Map<K, String> camelCaseValues() =>
+      {for (final e in entries) e.key: e.value.toString().toCamelCase()};
+
+  /// Returns a new map with all values converted to snake_case.
+  Map<K, String> snakeCaseValues() =>
+      {for (final e in entries) e.key: e.value.toString().toSnakeCase()};
+
+  /// Returns a new map with all values converted to kebab-case.
+  Map<K, String> kebabCaseValues() =>
+      {for (final e in entries) e.key: e.value.toString().toKebabCase()};
+
+  // ─── Partition ───────────────────────────────────────────────────────────────
+
+  /// Splits this map into two maps based on [predicate].
+  /// First map: entries where predicate is `true`.
+  /// Second map: entries where predicate is `false`.
+  Pair<Map<K, V>, Map<K, V>> partition(
+    bool Function(K key, V value) predicate,
+  ) {
+    final yes = <K, V>{}, no = <K, V>{};
+    for (final e in entries) {
+      (predicate(e.key, e.value) ? yes : no)[e.key] = e.value;
+    }
+    return Pair(yes, no);
+  }
+
+  // ─── Mutation ────────────────────────────────────────────────────────────────
+
+  /// Removes and returns the first entry in the map.
+  MapEntry<K, V> shift() {
+    final entry = entries.first;
+    remove(entry.key);
+    return entry;
+  }
+
+  /// Returns `true` if this map contains [key] with exactly [value].
+  bool contains(K key, V value) => containsKey(key) && this[key] == value;
+
+  /// Removes the entry with [key] only if its value equals [value].
+  /// Returns `true` if removed.
+  bool removeExact({required K key, required V value}) {
     if (containsKey(key) && this[key] == value) {
       remove(key);
       return true;
@@ -21,299 +186,56 @@ extension MapUtils on Map {
     return false;
   }
 
-  /// Add prefix to all keys in the map.
-  /// Returns a new map with prefixed keys.
-  Map<String, V> prefixKeys<V>(String prefix) {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map['$prefix$key'] = this[key] as V;
+  // ─── Serialization ───────────────────────────────────────────────────────────
+
+  /// Converts this map to a URL query string.
+  ///
+  /// ```dart
+  /// {'page': 1, 'q': 'hello'}.toQueryString() // 'page=1&q=hello'
+  /// ```
+  String toQueryString() => entries
+      .map((e) =>
+          '${Uri.encodeQueryComponent(e.key.toString())}=${Uri.encodeQueryComponent(e.value.toString())}')
+      .join('&');
+
+  /// Flattens nested maps to dot-notation keys.
+  ///
+  /// ```dart
+  /// {'a': {'b': {'c': 1}}}.flatten() // {'a.b.c': 1}
+  /// ```
+  Map<String, dynamic> flatten({String separator = '.'}) {
+    final result = <String, dynamic>{};
+    void flattenHelper(Map<dynamic, dynamic> map, String prefix) {
+      for (final e in map.entries) {
+        final key =
+            prefix.isEmpty ? e.key.toString() : '$prefix$separator${e.key}';
+        if (e.value is Map) {
+          flattenHelper(e.value as Map, key);
+        } else {
+          result[key] = e.value;
+        }
+      }
     }
-    return map;
+
+    flattenHelper(this, '');
+    return result;
   }
 
-  /// Add suffix to all keys in the map.
-  /// Returns a new map with suffixed keys.
-  Map<String, V> suffixKeys<V>(String suffix) {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map['$key$suffix'] = this[key] as V;
-    }
-    return map;
-  }
-
-  /// Add prefix to all values in the map.
-  /// Returns a new map with prefixed values.
-  Map<K, String> prefixValues<K>(String prefix) {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = '$prefix${this[key]}';
-    }
-    return map;
-  }
-
-  /// Add suffix to all values in the map.
-  /// Returns a new map with suffixed values.
-  Map<K, String> suffixValues<K>(String suffix) {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = '${this[key]}$suffix';
-    }
-    return map;
-  }
-
-  /// Capitalize all keys in the map.
-  /// Returns a new map with capitalized keys.
-  Map<String, V> capitalizeKeys<V>() {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map[key.toString().capitalize()] = this[key] as V;
-    }
-    return map;
-  }
-
-  /// Capitalize all values in the map.
-  /// Returns a new map with capitalized values.
-  Map<K, String> capitalizeValues<K>() {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = this[key].toString().capitalize();
-    }
-    return map;
-  }
-
-  /// Camel case all keys in the map.
-  /// Returns a new map with camel cased keys.
-  Map<String, V> camelCaseKeys<V>() {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map[key.toString().toCamelCase()] = this[key] as V;
-    }
-    return map;
-  }
-
-  /// Camel case all values in the map.
-  /// Returns a new map with camel cased values.
-  Map<K, String> camelCaseValues<K>() {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = this[key].toString().toCamelCase();
-    }
-    return map;
-  }
-
-  /// Snake case all keys in the map.
-  /// Returns a new map with snake cased keys.
-  Map<String, V> snakeCaseKeys<V>() {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map[key.toString().toSnakeCase()] = this[key] as V;
-    }
-    return map;
-  }
-
-  /// Snake case all values in the map.
-  /// Returns a new map with snake cased values.
-
-  Map<K, String> snakeCaseValues<K>() {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = this[key].toString().toSnakeCase();
-    }
-    return map;
-  }
-
-  /// Kebab case all keys in the map.
-  /// Returns a new map with kebab cased keys.
-  Map<String, V> kebabCaseKeys<V>() {
-    final map = <String, V>{};
-    for (final key in keys) {
-      map[key.toString().toKebabCase()] = this[key] as V;
-    }
-    return map;
-  }
-
-  /// Kebab case all values in the map.
-  /// Returns a new map with kebab cased values.
-  Map<K, String> kebabCaseValues<K>() {
-    final map = <K, String>{};
-    for (final key in keys) {
-      map[key as K] = this[key].toString().toKebabCase();
-    }
-    return map;
-  }
-
-  /// Split map into two maps based on the [predicate].
-  /// Returns a list of two maps.
-  Pair<Map<K, V>, Map<K, V>> partition<K, V>(
-      bool Function(K key, V value) predicate) {
-    final map1 = <K, V>{};
-    final map2 = <K, V>{};
-    for (final key in keys) {
-      if (predicate(key as K, this[key] as V)) {
-        map1[key] = this[key] as V;
+  /// Safely retrieves a deeply nested value using a list of [path] keys.
+  ///
+  /// ```dart
+  /// {'user': {'address': {'city': 'NY'}}}.deepGet(['user','address','city'])
+  /// // 'NY'
+  /// ```
+  dynamic deepGet(List<String> path) {
+    dynamic current = this;
+    for (final key in path) {
+      if (current is Map && current.containsKey(key)) {
+        current = current[key];
       } else {
-        map2[key] = this[key] as V;
+        return null;
       }
     }
-    return Pair(map1, map2);
-  }
-
-  /// Returns a new map with all entries that satisfy the given [predicate].
-  /// The entries in the resulting map preserve the order of the original map.
-  Map<K, V> filter<K, V>(bool Function(K key, V value) predicate) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (predicate(key as K, this[key] as V)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Returns a new map with all entries that do not satisfy the given [predicate].
-  /// The entries in the resulting map preserve the order of the original map.
-  Map<K, V> reject<K, V>(bool Function(K key, V value) predicate) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (!predicate(key as K, this[key] as V)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Filter null values from the map.
-  /// Returns a new map with non-null values.
-  Map<K, V> filterNull<K, V>() {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (this[key] != null) {
-        map[key as K] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Filter empty values from the map.
-  /// Returns a new map with non-empty values.
-  Map<K, V> filterEmpty<K, V>() {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (this[key] != null && this[key].toString().isNotEmpty) {
-        map[key as K] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Shift the first entry from the map.
-  MapEntry<K, V> shift<K, V>() {
-    final key = keys.first;
-    final value = this[key];
-    removeExact(key: key, value: value);
-    return MapEntry(key, value);
-  }
-
-  /// Filter where the key is in the given [keys].
-  /// Returns a new map with filtered entries.
-  Map<K, V> filterKeys<K, V>(Iterable<K> keys) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (containsKey(key)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Filter where the value is in the given [values].
-  /// Returns a new map with filtered entries.
-  Map<K, V> filterValues<K, V>(Iterable<V> values) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (values.contains(this[key])) {
-        map[key as K] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Filter where the key is not in the given [keys].
-  /// Returns a new map with filtered entries.
-  Map<K, V> rejectKeys<K, V>(Iterable<K> keys) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (!containsKey(key)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Filter where the value is not in the given [values].
-  /// Returns a new map with filtered entries.
-  Map<K, V> rejectValues<K, V>(Iterable<V> values) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (!values.contains(this[key])) {
-        map[key as K] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Returns a new map with all entries that satisfy the given [predicate].
-  /// The entries in the resulting map do not preserve the order of the original map.
-  Map<K, V> filterNot<K, V>(bool Function(K key, V value) predicate) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (!predicate(key as K, this[key] as V)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// Returns a new map with all entries that do not satisfy the given [predicate].
-  /// The entries in the resulting map do not
-  /// preserve the order of the original map.
-  Map<K, V> rejectNot<K, V>(bool Function(K key, V value) predicate) {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (predicate(key as K, this[key] as V)) {
-        map[key] = this[key] as V;
-      }
-    }
-    return map;
-  }
-
-  /// debug print the map with [label] and [separator].
-  /// [label] is the label for the map.
-  /// [separator] is the separator between key and value.
-  /// [indent] is the indent for each line.
-
-  void printDebug<K, V>({
-    String label = 'Map',
-    String separator = ': ',
-    String indent = '  ',
-  }) {
-    final sb = StringBuffer();
-    sb.writeln('$label:');
-    for (final key in keys) {
-      sb.writeln('$indent$key$separator${this[key]}');
-    }
-    debugPrint(sb.toString());
-  }
-
-  /// Remove duplicate values from the map.
-  /// Returns a new map with unique values.
-  Map<K, V> uniqueValues<K, V>() {
-    final map = <K, V>{};
-    for (final key in keys) {
-      if (!map.containsValue(this[key])) {
-        map[key as K] = this[key] as V;
-      }
-    }
-    return map;
+    return current;
   }
 }

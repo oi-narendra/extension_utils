@@ -1,13 +1,14 @@
+library;
+
 /// A wrapper class for a pair of objects.
 /// It is used to return two objects from a function.
 /// [T] is the type of the first object.
 /// [U] is the type of the second object.
-
 class Pair<T, U> {
+  Pair(this.first, this.second);
+
   T first;
   U second;
-
-  Pair(this.first, this.second);
 
   @override
   String toString() {

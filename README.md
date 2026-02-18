@@ -1,429 +1,310 @@
-A util library that contains various extensions for strings, lists, maps, and more.
+# extension_utils
+
+[![pub package](https://img.shields.io/pub/v/extension_utils.svg)](https://pub.dev/packages/extension_utils)
+
+A modern Dart/Flutter utility library providing practical extensions for `String`, `List`, `Map`, `num`, `DateTime`, `Duration`, `Color`, `Iterable`, and `Enum` types.
+
+Requires **Dart ≥ 3.3.0** and **Flutter ≥ 3.19.0**.
 
 ## Features
 
-- [x] String extensions
-- [x] List extensions
-- [x] Map extensions
-- [x] DateTime extensions
-- [x] Number extensions
-- [x] Enum extensions
-- [ ] Color extensions  
+| Extension | Description |
+|-----------|-------------|
+| `StringUtils` | Case conversion, validation, formatting, encoding |
+| `ListUtils` | Statistics, sorting, windowing, zipping, sampling |
+| `MapUtils` | Deep access, merging, key/value mapping, query strings |
+| `NumberUtils` | Math, formatting, numeral systems, ordinals |
+| `DateTimeUtils` | Boundaries, relative time, formatting, workday arithmetic |
+| `DurationUtils` | Human-readable formatting, `ago`/`fromNow` helpers |
+| `ColorUtils` | Lighten/darken, palettes, contrast, hex conversion |
+| `IterableUtils` | Safe access, aggregation, grouping, chunking |
+| `EnumUtils` | Pattern matching, human-readable labels |
 
-### Installation
-
-Add the following to your pubspec.yaml file:
+## Installation
 
 ```yaml
 dependencies:
-  extension_utils: ^1.0.1
+  extension_utils: ^2.0.0
 ```
-
-### Usage
 
 ```dart
 import 'package:extension_utils/extension_utils.dart';
-
-void main() {
-  print('Hello, World!'.toSnakeCase());
-  // hello_world
-}
 ```
+
+---
 
 ## API Reference
 
 ### String Extensions
 
 ```dart
-'hello, world!'.capitalize(); // Hello, world!
+// Case conversion
+'hello world'.toCamelCase()    // 'helloWorld'
+'hello world'.toPascalCase()   // 'HelloWorld'
+'hello world'.toSnakeCase()    // 'hello_world'
+'hello world'.toKebabCase()    // 'hello-world'
+'hello world'.toTitleCase()    // 'Hello World'
+'hello world'.toConstantCase() // 'HELLO_WORLD'
+'hello world'.capitalize()     // 'Hello world'
 
-'Hello, World!'.uncapitalize();   // hello, World!
+// Validation
+'user@example.com'.isEmail()    // true
+'https://dart.dev'.isUrl()      // true
+'+1-800-555-0100'.isPhoneNumber() // true
+'#FF5733'.isHexColor()          // true
+'dad'.isPalindrome()            // true
+'12345'.isDigits()              // true
+'hello'.isAlpha()               // true
 
-'hello, world!'.titleCase();  // Hello, World!
+// Formatting & transformation
+'hello world'.toSlug()          // 'hello-world'
+'John Doe'.initials()           // 'JD'
+'Hello World'.reverse()         // 'dlroW olleH'
+'1234567890'.mask(visibleCount: 4) // '******7890'
+'Long text here'.truncate(8)    // 'Long tex...'
+'<b>bold</b>'.stripHtml()       // 'bold'
 
-'hello, world!'.underscore(); // hello_world
+// Encoding
+'hello'.toBase64()              // 'aGVsbG8='
+'aGVsbG8='.fromBase64()        // 'hello'
 
-'hello, world!'.variablize(); // helloWorld
+// Utilities
+'hello world'.wordCount         // 2
+'hello'.countOccurrences('l')   // 2
+'hello'.equalsIgnoreCase('HELLO') // true
+'hello {name}!'.formatMap({'name': 'world'}) // 'hello world!'
+'hello {}!'.format(['world'])   // 'hello world!'
+'hello'.repeat(3, separator: '-') // 'hello-hello-hello'
 
-'hello, world!'.constantize();  // HELLO_WORLD
-
-'hello, world!'.humanize(); // Hello world
-
-'hello, world!'.pluralize();  // hello, worlds!
-
-'hello, world!'.tableize(); // hello_worlds
-
-'hello, world!'.sequenceize();  // hello_worlds
-
-'hello, world!'.foreignKey(); // hello_world_id
-
-'hello, world!'.pathize();  // hello/world
-
-'hello, world!'.toPascalCase(); // HelloWorld
-
-'hello, world!'.toSnakeCase();  // hello_world
-
-'hello, world!'.toKebabCase();  // hello-world
-
-'hello, world!'.toTrainCase();  // Hello-World
-
-'hello, world!'.toDotCase();  // hello.world
-
-'hello, world!'.toHtmlText(); // hello, world!
-
-'hello,\wworld!'.escape();  // hello,\\wworld!
-
-'dad'.isPalindrome(); // true
-
-'email@gmail.com'.isEmail();  // true
-
-'983123'.isDigits();  // true
-
-'#FFFFFF'.isHexColor(); // true
-
-'#FFFFFF'.toColor(); // Color(0xffffffff)
-
-'hello, world!'.wordCount();  // 2
-
-'hello, world!'.charCount();  // 13
-
-'hello, world!'.vowelCount(); // 3
-
-'hello, world!'.consonantCount(); // 8
-
-'hello, world!'.syllableCount();  // 3
-
-'hello, world!'.sentenceCount();  // 1
-
-'hello, world!'.between('hello', '!');  // , world
-
-'hello, world!'.before('world');  // hello, 
-
-'hello, world!'.after('hello'); // , world!
-
-'hello, world!'.beforeLast('o');  // hello, w
-
-'hello, world!'.afterLast('o'); // rld!
-
-'hello, world!'.beforeFirst('o'); // hell
-
-'hello, world!'.afterFirst('o');  // , world!
-
-'hello, world!'.startsWith('hello');  // true
-
-'hello, world!'.endsWith('!');  // true
-
-'hello, world!'.betweenFirst('hello', '!'); // , world
-
-'hello, world!'.betweenLast('hello', '!');  // , world
-
-'hello, world!'.containsIgnoreCase('HELLO');  // true
-
-'hello, world!'.dropLeft(6);  // world!
-
-'hello, world!'.dropRight(6); //  hello,
-
-'hello, world!'.dropLeftWhile((c) => c != ' '); // world!
-
-'hello, world!'.dropRightWhile((c) => c != ' ');  // hello,
-
-'hello, world!'.replaceAfterFirst('hello', '!');  // hello!
-
-'hello, world!'.replaceAfterLast('hello', '!'); // hello!
-
-'hello, world!'.replaceBeforeFirst('hello', '!'); // !, world!
-
-'hello, world!'.replaceBeforeLast('hello', '!');  // !, world!
-
-'hello, world!'.replaceRange(0, 5, 'hi'); // hi, world!
-
-'hello, world!'.toBytes();  // [104, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100, 33]
-
-'hello, world!'.toBase64(); // aGVsbG8sIHdvcmxkIQ==
-
-'hello, world!'.prepend('hi, ');  // hi, hello, world!
-
-'hello, world!'.append('!');  // hello, world!!
-
-'hello, {}!'.format(['world']); // hello, world!
-
-'hello, {name}!'.formatMap({'name': 'world'});  // hello, world!
+// Substrings
+'hello world'.between('hello ', '!')  // 'world'
+'hello world'.before(' ')             // 'hello'
+'hello world'.after(' ')              // 'world'
+'hello world'.dropLeft(6)             // 'world'
+'hello world'.dropRight(6)            // 'hello'
+'hello world'.removePrefix('hello ')  // 'world'
+'hello world'.removeSuffix(' world')  // 'hello'
 ```
 
 ### List Extensions
 
 ```dart
-['hello', 'world'].removeFirst(); // ['world']
+// Safe access
+[1, 2, 3].second    // 2
+[1, 2, 3].third     // 3
+[1, 2, 3].penultimate // 2
 
-['hello', 'world'].removeLast(); // ['hello']
+// Removal
+[1, 2, 1, 3].removeFirst(1)          // [2, 1, 3]
+[1, 2, 1, 3].removeLastOccurrence(1) // [1, 2, 3]
+[1, 2, 1, 3].removeAll(1)            // [2, 3]
 
-['hello','world','hello','world'].removeAll('hello'); // ['world','world']
+// Sorting
+['b', 'a', 'c'].sortedBy((s) => s)            // ['a', 'b', 'c']
+['b', 'a', 'c'].sortedByDescending((s) => s)  // ['c', 'b', 'a']
 
-['lorem','ipsum','hello', 'world'].removeAllList(['lorem','hello']); // ['ipsum','world']
+// Transformation
+[[1, 2], [3, 4]].flatten()              // [1, 2, 3, 4]
+[1, 2, 3].zip(['a', 'b', 'c'])         // [(1, 'a'), (2, 'b'), (3, 'c')]
+[1, 2, 3, 4, 5].windowed(3)            // [[1,2,3],[2,3,4],[3,4,5]]
+[1, 2, 3].rotate(1)                    // [2, 3, 1]
 
-['lorem','ipsum','hello', 'world'].removeAllSet({'lorem','hello'}); // ['ipsum','world']
+// Statistics (on List<num>)
+[1, 2, 3, 4].average   // 2.5
+[1, 2, 3, 4].median    // 2.5
+[1, 1, 2, 3].mode      // [1]
+[1, 2, 3].sumBy((n) => n * 2) // 12
 
-['lorem','ipsum','hello', 'world'].removeAllIterable(['lorem','hello']); // ['ipsum','world']
+// Sampling
+[1, 2, 3, 4, 5].random()     // random element
+[1, 2, 3, 4, 5].sample(3)    // 3 random elements
 
-['lorem','ipsum','hello', 'world'].removeAllMapKeys({'lorem': 'ipsum', 'hello': 'world'}); // ['ipsum','world']
+// Grouping
+[1, 2, 3, 4].groupBy((n) => n.isEven ? 'even' : 'odd')
+// {'odd': [1, 3], 'even': [2, 4]}
 
-['lorem','ipsum','hello', 'world'].removeAllMapValues({'lorem': 'ipsum', 'hello': 'world'}); // ['lorem','hello']
-
-['hi','hello','lorem', 'ipsum'].parititon((s) => s.startsWith('h')); // Pair(['hi','hello'],['lorem', 'ipsum'])
-
-[Product(qty: 5, price: 10), Product(qty: 10, price: 20)].sumBy((p) => p.qty * p.price); // 250
-
-['lorem','ipsum','hello', 'world'].containsAllList(['lorem','hello']); // true
-
-['lorem','ipsum','hello', 'world'].containsAllSet({'lorem','hello'}); // true
-
-['lorem','ipsum','hello', 'world'].containsAllIterable(['lorem','hello']); // true
-
-['lorem','ipsum','hello', 'world'].containsAllMapKeys({'lorem': 'ipsum', 'hello': 'world'}); // true
-
-['lorem','ipsum','hello', 'world'].containsAllMapValues({'lorem': 'ipsum', 'hello': 'world'}); // false
-
-['lorem','ipsum','hello', 'world'].mergeList(['lorem','hello'],unique: true); // ['lorem','ipsum','hello', 'world','lorem']
-
-['lorem','ipsum','hello', 'world'].toMap(); // {'lorem': 'lorem','ipsum': 'ipsum','hello': 'hello', 'world': 'world'}
-
-['lorem','ipsum','helloo', 'world'].distinctBy((a) => a.length == 5); // ['lorem','helloo']
-
-['lorem','ipsum','hello', 'world'].compact(); // ['lorem','ipsum','hello', 'world']
-
-['lorem','ipsum','hello', 'world'].clearAndAddAll(['lorem','hello']); // ['lorem','hello']
-
-['hi', 'ipsum', 'hello', 'bro'].sortedBy((s) => s.length); // ['hi', 'bro', 'hello', 'ipsum']
-
-['hi', 'ipsum', 'hello', 'bro'].sortByDescending((s) => s.length); // ['ipsum', 'hello', 'hi', 'bro']
-
-['hi', 'ipsum', 'hello', 'bro'].groupBy((s) => s.length); // {2: ['hi', 'bro'], 5: ['ipsum', 'hello']}
-
-['hi', 'ipsum', 'hello', 'bro'].joinToString(','); // hi,ipsum,hello,bro
-
-['hi', 'ipsum', 'hello', 'bro'].joinToString(',', transform: (s) => s.toUpperCase()); // HI,IPSUM,HELLO,BRO
-
-['hi', 'ipsum', 'hello', 'bro'].joinToString(',', prefix: '(', suffix: ')'); // (hi,ipsum,hello,bro)
-
-[1,2,3,4,5,6].takeWhile((i) => i < 4); // [1,2,3]
-
-[1,2,3,4,5,6].takeIf((i) => i < 4 || i == 5 ); // [1,2,3,5]
-
-```
-
-### Number Extensions
-
-```dart
-1.0.isEven(); // false
-
-1.0.isOdd(); // true
-
-1.0.isNegative(); // false
-
-1.0.isPositive(); // true
-
-1.0.isZero(); // false
-
-(1/2).isInteger(); // false
-
--2.swapSign(); // 2
-
-2.swapSign(); // -2
-
-2.000524.toPrecision(3); // 2.00
-
-2.000524.toPrecision(4); // 2.001
-
-645123512.toCurrencyString(); // 645,123,512.00
-
-2.000524.isInRange(1, 3); // true
-
-9842323112.startsWith(984); // true
-
-9842323112.endsWith(112); // true
-
-9842323112.contains(232); // true
-
-9842323112.count(2); // 3
-
-12312412.indexesOfFirst(2); // 1
-
-12312412.indexesOfLast(2); // 5
-
-12312412.indexesOfAll(2); // [1, 5]
-
-9876543210.sumOfDigits(); // 45
-
-9876543210.digitsAfter(2); // 10
-
-9876543210.digitsBefore(2); // 98765432
-
-9876543210.digitsBetween(9, 4); // 8765
-
-9872543210.digitsBeforeFirst(2); // 987
-
-9872543210.digitsAfterFirst(2); // 543210
-
-9872543210.digitsBeforeLast(2); // 9872543
-
-9872543210.digitsAfterLast(2); // 10
-
-10.loremIpsum(); // Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-
-20.randomList(min: 1, max: 10); // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+// Joining
+[1, 2, 3].joinToString(', ')  // '1, 2, 3'
 ```
 
 ### Map Extensions
 
 ```dart
-{}.isEmpty(); // true
+// Safe access
+{'a': 1}.getOrDefault('b', 0)   // 0
+{'a': 1}.getOrPut('b', () => 2) // 2 (and inserts it)
 
-{'hello': 'world'}.contains('hello','world'); // true
+// Transformation
+{'a': 1, 'b': 2}.mapKeys((k) => k.toUpperCase())   // {'A': 1, 'B': 2}
+{'a': 1, 'b': 2}.mapValues((v) => v * 10)          // {'a': 10, 'b': 20}
+{'a': 1, 'b': 2}.invertMap()                        // {1: 'a', 2: 'b'}
 
-{'hello': 'world','lorem': 'ipsum'}.removeExact(key: 'hello', value: 'world'); // {'lorem': 'ipsum'}
+// Merging
+{'a': 1}.mergeWith({'b': 2})  // {'a': 1, 'b': 2}
 
-{'hello': 'world','lorem': 'ipsum'}.prefixKeys('product-') // {'product-hello': 'world','product-lorem': 'ipsum'}
+// Filtering
+{'a': 1, 'b': 2}.filter((k, v) => v > 1)  // {'b': 2}
+{'a': 1, 'b': 2}.filterKeys(['a'])         // {'a': 1}
+{'a': 1, 'b': 2}.filterValues([2])         // {'b': 2}
 
-{'hello': 'world','lorem': 'ipsum'}.suffixKeys('-product') // {'hello-product': 'world','lorem-product': 'ipsum'}
+// Nested access
+{'a': {'b': {'c': 42}}}.deepGet('a.b.c')  // 42
 
-{'hello': 'world','lorem': 'ipsum'}.prefixValues('product-') // {'hello': 'product-world','lorem': 'product-ipsum'}
+// Serialization
+{'q': 'dart', 'page': '1'}.toQueryString() // 'q=dart&page=1'
 
-{'hello': 'world','lorem': 'ipsum'}.suffixValues('-product') // {'hello': 'world-product','lorem': 'ipsum-product'}
+// Flattening
+{'a': {'b': 1}}.flatten()  // {'a.b': 1}
+```
 
-{'hello': 'world','lorem': 'ipsum'}.capitalizeKeys() // {'Hello': 'world','Lorem': 'ipsum'}
+### Number Extensions
 
-{'hello': 'world','lorem': 'ipsum'}.capitalizeValues() // {'hello': 'World','lorem': 'Ipsum'}
+```dart
+// Math
+0.0.lerp(10.0, 0.5)    // 5.0
+5.0.normalize(0, 10)   // 0.5
+5.factorial()          // 120
+7.isPrime              // true
+3.14159.toRadians()    // 0.054... (wait, this is degrees→radians)
+1.5708.toDegrees()     // 90.0
 
-{'hello world': 'lorem ipsum'}.camelCaseKeys() // {'helloWorld': 'lorem ipsum'}
-
-{'hello world': 'lorem ipsum'}.camelCaseValues() // {'hello world': 'loremIpsum'}
-
-{'hello world': 'lorem ipsum'}.snakeCaseKeys() // {'hello_world': 'lorem ipsum'}
-
-{'hello world': 'lorem ipsum'}.snakeCaseValues() // {'hello world': 'lorem_ipsum'}
-
-{'hello world': 'lorem ipsum'}.kebabCaseKeys() // {'hello-world': 'lorem ipsum'}
-
-{'hello world': 'lorem ipsum'}.kebabCaseValues() // {'hello world': 'lorem-ipsum'}
-
-///List<Map<K, V>> partition<K, V>(bool Function(K key, V value) predicate)
-{'hello': 'world','lorem': 'ipsum','hi': 'there'}.partition((key, value) => key.length == 5); // [{'hello': 'world', 'lorem': 'ipsum'},{'hi': 'there'}]
-
-{'hello': 'world','lorem': 'ipsum'}.filter((key, value) => key == 'hello') // {'hello': 'world'}
-
-{'hello': 'world','lorem': 'ipsum'}.filterNull() // {'hello': 'world','lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.filterEmpty() // {'hello': 'world','lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.filterKeys(['hello']) // {'hello': 'world'}
-
-{'hello': 'world','lorem': 'ipsum'}.filterValues(['world']) // {'hello': 'world'}
-
-{'hello': 'world','lorem': 'ipsum'}.filterNot((key, value) => key == 'hello') // {'lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.reject((key, value) => key == 'hello') // {'lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.rejectKeys(['hello']) // {'lorem': 'ipsum'}
-
-{'hello': 'world,lorem': 'ipsum'}.rejectValues(['world']) // {'lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.rejectNot((key, value) => key == 'hello') // {'hello': 'world'}
-
-{'hello': 'world','lorem': 'ipsum'}.shift() // {'lorem': 'ipsum'}
-
-{'hello': 'world','lorem': 'ipsum'}.printDebug(label: 'Map', separator: ': ', indent: ',  ') // Map: hello: world,  lorem: ipsum
-
-{'hello': 'world','lorem': 'ipsum','lo': 'ipsum'}.uniqueValues() // {'hello': 'world','lorem': 'ipsum'}
+// Formatting
+1234567.toCurrencyString()           // '1,234,567.00'
+1234567.toCurrencyString(symbol: '€') // '€1,234,567.00'
+3.toOrdinal()                        // '3rd'
+2024.toRoman()                       // 'MMXXIV'
+255.toBinary()                       // '11111111'
+255.toHex()                          // 'ff'
+255.toOctal()                        // '377'
+3.14159.roundTo(2)                   // 3.14
+3.14159.toPrecision(4)               // '3.142'
+42.pad(5)                            // '00042'
+25.0.percentage(200)                 // 12.5
+1234.digitCount                      // 4
 ```
 
 ### DateTime Extensions
 
 ```dart
-DateTime.now().isToday() // true
+// Boundaries
+DateTime.now().startOfDay    // 2024-03-05 00:00:00.000
+DateTime.now().endOfDay      // 2024-03-05 23:59:59.999
+DateTime.now().startOfWeek   // Monday of this week
+DateTime.now().startOfMonth  // 2024-03-01
+DateTime.now().startOfYear   // 2024-01-01
 
-DateTime.now().isYesterday() // false
+// Relative time
+DateTime.now().subtract(Duration(hours: 2)).timeAgo() // '2 hours ago'
+DateTime.now().add(Duration(days: 3)).timeAgo()       // 'in 3 days'
 
-DateTime.now().isTomorrow() // false
+// Formatting (no intl dependency)
+DateTime(2024, 3, 5).format('dd MMM yyyy')  // '05 Mar 2024'
+DateTime(2024, 3, 5).format('yyyy-MM-dd')   // '2024-03-05'
+DateTime(2024, 3, 5).format('MMMM')         // 'March'
+DateTime(2024, 3, 5).format('EEE')          // 'Tue'
 
-DateTime.now().isPast() // false
+// Predicates
+DateTime.now().isToday     // true
+DateTime.now().isWeekend   // false
+DateTime.now().isLeapYear  // false
+DateTime(2024, 3, 5).isBetween(DateTime(2024, 1, 1), DateTime(2024, 12, 31)) // true
 
-DateTime.now().isFuture() // false
+// Utilities
+DateTime.now().addWorkdays(5)    // 5 business days from now
+DateTime(2000, 6, 15).age        // years since that date
+DateTime.now().quarterOfYear     // 1–4
+DateTime.now().weekOfYear        // 1–53
+DateTime.now().season            // 'Spring', 'Summer', 'Autumn', 'Winter'
+DateTime.now().toUtcIso8601      // '2024-03-05T...'
+```
 
-DateTime.now().isSameDay(DateTime.now()) // true
+### Duration Extensions
 
-DateTime.now().isSameMonth(DateTime.now()) // true
+```dart
+const Duration(hours: 1, minutes: 23, seconds: 45).formatted // '1h 23m 45s'
+const Duration(minutes: 90).toHhMmSs()                       // '01:30:00'
+const Duration(seconds: 75).toMmSs()                         // '01:15'
 
-DateTime.now().isSameYear(DateTime.now()) // true
+const Duration(hours: 2).ago      // DateTime 2 hours ago
+const Duration(days: 3).fromNow   // DateTime 3 days from now
 
-DateTime.now().isSameHour(DateTime.now()) // true
+const Duration(days: 14).inWeeks  // 2
+const Duration.zero.isZero        // true
+```
 
-DateTime.now().isSameMinute(DateTime.now()) // true
+### Color Extensions
 
-DateTime.now().isSameSecond(DateTime.now()) // true
+```dart
+Colors.blue.isLight      // false
+Colors.blue.isDark       // true
+Colors.blue.luminance    // 0.07...
+Colors.blue.contrastColor // Colors.white or Colors.black
 
-DateTime.now().isSameMillisecond(DateTime.now()) // true
+Colors.blue.lighten(0.2)   // lighter blue
+Colors.blue.darken(0.2)    // darker blue
+Colors.blue.grayscale       // desaturated blue
 
-DateTime.now().isAheadByDays(DateTime.now(), 1) // false
+Colors.red.mix(Colors.blue, 0.5)  // purple
+Colors.red.complementary          // cyan
 
-DateTime.now().isBehindByDays(DateTime.now(), 1) // false
+Colors.blue.analogous(count: 3)   // 3 analogous colors
+Colors.blue.triadic               // 3 triadic colors
 
-DateTime.now().isMorning() // true
+Colors.blue.toHex()               // '#FF2196F3'
+Colors.blue.toMaterialColor()     // MaterialColor swatch
+```
 
-DateTime.now().isAfternoon() // false
+### Iterable Extensions
 
-DateTime.now().isEvening() // false
+```dart
+[].firstOrNull    // null
+[1].singleOrNull  // 1
+[1, 2].singleOrNull // null (more than one)
 
-DateTime.now().isNight() // false
+[1, 2, 3, 4].count((n) => n.isEven)  // 2
+[1, 3, 5].none((n) => n.isEven)      // true
 
-DateTime.now().isWeekend() // false
+[1, 2, 3].sumBy((n) => n * 2)        // 12
+[1, 2, 3].averageBy((n) => n)        // 2.0
+['a', 'bb', 'ccc'].maxBy((s) => s.length) // 'ccc'
+['a', 'bb', 'ccc'].minBy((s) => s.length) // 'a'
 
-DateTime.now().isWeekday() // true
+[1, 2, 3].forEachIndexed((i, e) => print('$i: $e'))
+[1, 2, 3].mapIndexed((i, e) => '$i:$e').toList() // ['0:1', '1:2', '2:3']
 
-DateTime.now().isHoliday() // false
+['hello', 'world'].flatMap((s) => s.split('')).toList()
+// ['h','e','l','l','o','w','o','r','l','d']
 
-DateTime.now().daysUntil(DateTime.now()) // 0
+[1, 2, 3, 4, 5].chunked(2).toList()  // [[1,2],[3,4],[5]]
 
-DateTime.now().hoursUntil(DateTime.now()) // 0
-
-DateTime.now().daysUntilEndOfYear() // 0
-
-DateTime.now().season() // 'winter'
-
-DateTime.now().isInSeason('winter') // true
-
-DateTime.now().isLeapYear() // false
-
-DateTime.now().daysUntilWeekend() // 5
+users.groupBy((u) => u.role)         // Map<Role, List<User>>
+users.associateBy((u) => u.id)       // Map<int, User>
 ```
 
 ### Enum Extensions
 
 ```dart
-enum UserType { admin, user, guest }
+enum Status { active, inactive, pending }
 
-UserType userType = UserType.admin;
+Status.active.label  // 'Active'
 
-userType.when({
-  UserType.admin: () => debugPrint('Admin'),
-  UserType.user: () => debugPrint('User'),
-  UserType.guest: () => debugPrint('Guest'),
-}) // 'Admin'
+Status.active.when({
+  Status.active:   () => 'Running',
+  Status.inactive: () => 'Stopped',
+  Status.pending:  () => 'Waiting',
+}); // 'Running'
 
-userType.whenOrElse({
-  UserType.admin: () => debugPrint('Admin'),
-  UserType.user: () => debugPrint('User'),
-}, orElse: () => debugPrint('Guest')) // 'Admin'
-
+Status.active.whenOrElse({
+  Status.inactive: () => 'Stopped',
+}, orElse: () => 'Other'); // 'Other'
 ```
 
-### Color Extensions
-
-- will be added soon
+---
 
 ## Contributing
 
-If you have any suggestions or ideas, feel free to open an issue or a pull request.
+Issues and pull requests are welcome at [github.com/oi-narendra/extension_utils](https://github.com/oi-narendra/extension_utils).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+MIT — see [LICENSE](LICENSE) for details.

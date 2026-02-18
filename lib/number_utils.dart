@@ -1,280 +1,269 @@
-import 'dart:math';
+import 'dart:math' as math;
 
+/// Extensions on [num] for real-world utility operations.
 extension NumberUtils on num {
-  /// Returns `true` if the number is even, `false` otherwise.
-  bool get isEven => this % 2 == 0;
+  // ─── Predicates ──────────────────────────────────────────────────────────────
 
-  /// Returns `true` if the number is odd, `false` otherwise.
-  bool get isOdd => this % 2 != 0;
-
-  /// Returns `true` if the number is positive, `false` otherwise.
+  /// Returns `true` if this number is positive (> 0).
   bool get isPositive => this > 0;
 
-  /// Returns `true` if the number is negative, `false` otherwise.
-  bool get isNegative => this < 0;
-
-  /// Returns `true` if the number is zero, `false` otherwise.
+  /// Returns `true` if this number is zero.
   bool get isZero => this == 0;
 
-  /// Returns `true` if the number is an integer, `false` otherwise.
-  bool get isInteger => this == toInt();
+  /// Returns `true` if this number has no fractional part.
+  bool get isInteger => this == truncate();
 
-  /// Returns `true` if the number is a double, `false` otherwise.
-  bool get isDouble => this == toDouble();
+  /// Returns `true` if this number has a fractional part.
+  bool get isDouble => this != truncate();
 
-  /// Swap the sign of the number.
+  /// Returns `true` if this number is prime.
+  /// Only meaningful for positive integers.
+  bool get isPrime {
+    final n = toInt();
+    if (n < 2) return false;
+    if (n == 2) return true;
+    if (n.isEven) return false;
+    for (var i = 3; i * i <= n; i += 2) {
+      if (n % i == 0) return false;
+    }
+    return true;
+  }
+
+  /// Returns `true` if this number is in the range [min]..[max] (inclusive).
+  bool isInRange(num min, num max) => this >= min && this <= max;
+
+  // ─── Arithmetic ──────────────────────────────────────────────────────────────
+
+  /// Negates this number.
   num swapSign() => -this;
 
-  /// Convert the number to a [String] with the specified [precision].
-  /// If [precision] is not specified, the default is 2.
+  /// Linear interpolation from this number to [to] by factor [t] (0..1).
+  ///
+  /// ```dart
+  /// 0.lerp(100, 0.5) // 50.0
+  /// ```
+  double lerp(num to, double t) => this + (to - this) * t;
 
-  String toPrecision([int precision = 2]) {
-    var result = toStringAsFixed(precision);
-    if (result.endsWith('.00')) {
-      result = result.substring(0, result.length - 3);
+  /// Normalizes this number to the range 0..1 given [min] and [max].
+  ///
+  /// ```dart
+  /// 50.normalize(0, 100) // 0.5
+  /// ```
+  double normalize(num min, num max) {
+    if (max == min) return 0;
+    return (this - min) / (max - min);
+  }
+
+  /// Returns the factorial of this number (must be a non-negative integer).
+  ///
+  /// ```dart
+  /// 5.factorial() // 120
+  /// ```
+  int factorial() {
+    final n = toInt();
+    if (n < 0) throw ArgumentError('factorial requires a non-negative integer');
+    if (n == 0 || n == 1) return 1;
+    var result = 1;
+    for (var i = 2; i <= n; i++) {
+      result *= i;
     }
     return result;
   }
 
-  /// Convert to currency string with specified delimiter and precision.
-  /// If [delimiter] is not specified, the default is ','.
-  /// If [precision] is not specified, the default is 2.
-
-  String toCurrencyString([String delimiter = ',', int precision = 2]) {
-    var result1 = toPrecision(precision);
-    var parts = result1.split('.');
-    var integer = parts[0];
-    var decimal = parts[1];
-    var result = '';
-    var count = 0;
-    for (var i = integer.length - 1; i >= 0; i--) {
-      result = integer[i] + result;
-      count++;
-      if (count == 3 && i != 0) {
-        result = delimiter + result;
-        count = 0;
-      }
-    }
-    return '$result.$decimal';
-  }
-
-  /// Check if the number is in the range [min] to [max].
-  /// Returns `true` if the number is in the range, `false` otherwise.
-  bool isInRange(num min, num max) => this >= min && this <= max;
-
-  /// Check if the number starts with [prefix].
-  /// Returns `true` if the number starts with [prefix], `false` otherwise.
-  bool startsWith(num prefix) => toString().startsWith(prefix.toString());
-
-  /// Check if the number ends with [suffix].
-  /// Returns `true` if the number ends with [suffix], `false` otherwise.
-  bool endsWith(num suffix) => toString().endsWith(suffix.toString());
-
-  /// Check if the number contains [substring].
-  /// Returns `true` if the number contains [substring], `false` otherwise.
-  bool contains(num substring) => toString().contains(substring.toString());
-
-  /// Get count of a [substring] in the number.
-  /// Returns the count of [substring] in the number.
-
-  int count(num substring) {
-    var count = 0;
-    var index = 0;
-    while (true) {
-      index = toString().indexOf(substring.toString(), index);
-      if (index == -1) break;
-      count++;
-      index++;
-    }
-    return count;
-  }
-
-  /// get the index of all occurrences of [substring] in the number.
-
-  List<int> indexesOf(num substring) {
-    final indexes = <int>[];
-    var index = 0;
-    while (true) {
-      index = toString().indexOf(substring.toString(), index);
-      if (index == -1) break;
-      indexes.add(index);
-      index++;
-    }
-    return indexes;
-  }
-
-  /// Get the index of the first occurrence of [substring] in the number.
-  int indexOfFirst(num substring) => toString().indexOf(substring.toString());
-
-  /// Get the index of the last occurrence of [substring] in the number.
-  /// Returns the index of the last occurrence of [substring] in the number.
-  int indexOfLast(num substring) =>
-      toString().lastIndexOf(substring.toString());
-
-  /// sum of digits
-  /// Returns the sum of digits in the number.
-  num sumOfDigits() {
-    num sum = 0;
-    var number = this;
-    while (number > 0) {
-      sum += number % 10;
-      number = (number / 10).floor();
+  /// Returns the sum of digits of this number (integer part only).
+  ///
+  /// ```dart
+  /// 123.sumOfDigits() // 6
+  /// ```
+  int sumOfDigits() {
+    var n = toInt().abs();
+    var sum = 0;
+    while (n > 0) {
+      sum += n % 10;
+      n ~/= 10;
     }
     return sum;
   }
 
-  /// Get the digits after a [substring] in the number
-  /// Returns the digits after a [substring] in the number
-  num digitsAfter(num substring) {
-    var index = toString().indexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(index + 1);
-    return int.parse(result);
+  /// Returns the number of digits in the integer part.
+  int get digitCount => toInt().abs().toString().length;
+
+  /// Reverses the digits of this number.
+  ///
+  /// ```dart
+  /// 1234.reversed // 4321
+  /// ```
+  int get reversed =>
+      int.parse(toInt().abs().toString().split('').reversed.join()) *
+      (this < 0 ? -1 : 1);
+
+  // ─── Angle Conversion ────────────────────────────────────────────────────────
+
+  /// Converts degrees to radians.
+  double toRadians() => this * math.pi / 180;
+
+  /// Converts radians to degrees.
+  double toDegrees() => this * 180 / math.pi;
+
+  // ─── Formatting ──────────────────────────────────────────────────────────────
+
+  /// Converts to a string with [precision] decimal places, stripping trailing
+  /// zeros (e.g. `1.50` → `'1.5'`, `1.00` → `'1'`).
+  ///
+  /// ```dart
+  /// 1.5.toPrecision(2) // '1.5'
+  /// 1.0.toPrecision(2) // '1'
+  /// ```
+  String toPrecision([int precision = 2]) {
+    final s = toStringAsFixed(precision);
+    if (!s.contains('.')) return s;
+    return s.replaceAll(RegExp(r'\.?0+$'), '');
   }
 
-  /// Get the digits before a [substring] in the number
-  /// Returns the digits before a [substring] in the number
-  num digitsBefore(num substring) {
-    var index = toString().indexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(0, index);
-    return int.parse(result);
+  /// Converts to a currency-formatted string.
+  ///
+  /// ```dart
+  /// 1234567.89.toCurrencyString() // '1,234,567.89'
+  /// 1000.toCurrencyString(symbol: '\$') // '\$1,000'
+  /// ```
+  String toCurrencyString({
+    String delimiter = ',',
+    int precision = 2,
+    String symbol = '',
+  }) {
+    final fixed = toStringAsFixed(precision);
+    final parts = fixed.split('.');
+    var integer = parts[0];
+    final decimal = parts.length > 1 ? parts[1] : '';
+
+    // Insert thousands delimiters
+    final buf = StringBuffer();
+    for (var i = 0; i < integer.length; i++) {
+      if (i > 0 && (integer.length - i) % 3 == 0) buf.write(delimiter);
+      buf.write(integer[i]);
+    }
+    integer = buf.toString();
+
+    final hasDecimal = decimal.isNotEmpty && decimal != '0' * precision;
+    final result = hasDecimal ? '$integer.$decimal' : integer;
+    return '$symbol$result';
   }
 
-  /// Get the digits between [start] and [end] in the number
-  /// Returns the digits between [start] and [end] in the number
-  num digitsBetween(num start, num end) {
-    var startIndex = toString().indexOf(start.toString());
-    if (startIndex == -1) return 0;
-    var endIndex = toString().indexOf(end.toString(), startIndex + 1);
-    if (endIndex == -1) return 0;
-    var result = toString().substring(startIndex + 1, endIndex);
-    return int.parse(result);
+  /// Returns this number as a percentage of [total], formatted to [precision]
+  /// decimal places.
+  ///
+  /// ```dart
+  /// 25.percentage(200) // '12.5%'
+  /// ```
+  String percentage(num total, {int precision = 1}) {
+    if (total == 0) return '0%';
+    return '${((this / total) * 100).toStringAsFixed(precision)}%';
   }
 
-  /// Get the digits before the first occurrence of [substring] in the number
-  /// Returns the digits before the first occurrence of [substring] in the number
-  num digitsBeforeFirst(num substring) {
-    var index = toString().indexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(0, index);
-    return int.parse(result);
+  /// Pads this number's string representation to [width] with [padChar].
+  ///
+  /// ```dart
+  /// 7.pad(3) // '007'
+  /// ```
+  String pad(int width, {String padChar = '0'}) =>
+      toString().padLeft(width, padChar);
+
+  /// Returns the ordinal string for this number ("1st", "2nd", "3rd", etc.).
+  ///
+  /// ```dart
+  /// 1.toOrdinal() // '1st'
+  /// 11.toOrdinal() // '11th'
+  /// 22.toOrdinal() // '22nd'
+  /// ```
+  String toOrdinal() {
+    final n = toInt();
+    if (n % 100 >= 11 && n % 100 <= 13) return '${n}th';
+    switch (n % 10) {
+      case 1:
+        return '${n}st';
+      case 2:
+        return '${n}nd';
+      case 3:
+        return '${n}rd';
+      default:
+        return '${n}th';
+    }
   }
 
-  /// Get the digits after the first occurrence of [substring] in the number
-  /// Returns the digits after the first occurrence of [substring] in the number
-  num digitsAfterFirst(num substring) {
-    var index = toString().indexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(index + 1);
-    return int.parse(result);
-  }
-
-  /// Get the digits before the last occurrence of [substring] in the number
-  /// Returns the digits before the last occurrence of [substring] in the number
-  num digitsBeforeLast(num substring) {
-    var index = toString().lastIndexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(0, index);
-    return int.parse(result);
-  }
-
-  /// Get the digits after the last occurrence of [substring] in the number
-  /// Returns the digits after the last occurrence of [substring] in the number
-  num digitsAfterLast(num substring) {
-    var index = toString().lastIndexOf(substring.toString());
-    if (index == -1) return 0;
-    var result = toString().substring(index + 1);
-    return int.parse(result);
-  }
-
-  /// Get the lorem ipsum text of [this] words.
-  String loremIpsum() {
-    var words = [
-      'lorem',
-      'ipsum',
-      'dolor',
-      'sit',
-      'amet',
-      'consectetur',
-      'adipiscing',
-      'elit',
-      'sed',
-      'do',
-      'eiusmod',
-      'tempor',
-      'incididunt',
-      'ut',
-      'labore',
-      'et',
-      'dolore',
-      'magna',
-      'aliqua',
-      'ut',
-      'enim',
-      'ad',
-      'minim',
-      'veniam',
-      'quis',
-      'nostrud',
-      'exercitation',
-      'ullamco',
-      'laboris',
-      'nisi',
-      'ut',
-      'aliquip',
-      'ex',
-      'ea',
-      'commodo',
-      'consequat',
-      'duis',
-      'aute',
-      'irure',
-      'dolor',
-      'in',
-      'reprehenderit',
-      'in',
-      'voluptate',
-      'velit',
-      'esse',
-      'cillum',
-      'dolore',
-      'eu',
-      'fugiat',
-      'nulla',
-      'pariatur',
-      'excepteur',
-      'sint',
-      'occaecat',
-      'cupidatat',
-      'non',
-      'proident',
-      'sunt',
-      'in',
-      'culpa',
-      'qui',
-      'officia',
-      'deserunt',
-      'mollit',
-      'anim',
-      'id',
-      'est',
-      'laborum'
+  /// Converts this number to a Roman numeral string (1–3999).
+  ///
+  /// ```dart
+  /// 2024.toRoman() // 'MMXXIV'
+  /// ```
+  String toRoman() {
+    final n = toInt();
+    if (n < 1 || n > 3999) throw RangeError('toRoman supports 1–3999');
+    const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const syms = [
+      'M',
+      'CM',
+      'D',
+      'CD',
+      'C',
+      'XC',
+      'L',
+      'XL',
+      'X',
+      'IX',
+      'V',
+      'IV',
+      'I'
     ];
-
-    var result = '';
-    for (var i = 0; i < this; i++) {
-      result += '${words[i % words.length]} ';
+    final buf = StringBuffer();
+    var remaining = n;
+    for (var i = 0; i < vals.length; i++) {
+      while (remaining >= vals[i]) {
+        buf.write(syms[i]);
+        remaining -= vals[i];
+      }
     }
-    return result.trim();
+    return buf.toString();
   }
 
-  /// Get list of random numbers.
+  /// Converts this number to its binary string representation.
+  ///
+  /// ```dart
+  /// 10.toBinary() // '1010'
+  /// ```
+  String toBinary() => toInt().toRadixString(2);
+
+  /// Converts this number to its hexadecimal string representation.
+  ///
+  /// ```dart
+  /// 255.toHex() // 'ff'
+  /// ```
+  String toHex({bool upperCase = false}) {
+    final s = toInt().toRadixString(16);
+    return upperCase ? s.toUpperCase() : s;
+  }
+
+  /// Converts this number to its octal string representation.
+  ///
+  /// ```dart
+  /// 8.toOctal() // '10'
+  /// ```
+  String toOctal() => toInt().toRadixString(8);
+
+  /// Rounds this number to [decimals] decimal places.
+  ///
+  /// ```dart
+  /// 3.14159.roundTo(2) // 3.14
+  /// ```
+  double roundTo(int decimals) {
+    final factor = math.pow(10, decimals);
+    return (this * factor).round() / factor;
+  }
+
+  // ─── Random ──────────────────────────────────────────────────────────────────
+
+  /// Returns a list of [this] random numbers in [min]..[max].
   List<num> randomList({int min = 0, int max = 100}) {
-    var result = <num>[];
-    for (var i = 0; i < this; i++) {
-      result.add(Random().nextInt(max - min) + min);
-    }
-    return result;
+    final rng = math.Random();
+    return List.generate(toInt(), (_) => rng.nextInt(max - min) + min);
   }
 }
