@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added `Debouncer` and `Throttler` with cancellation and disposal.
+- Added an interactive example for search and rapid taps.
+
 ## 2.0.1
 
 - Correct the minimum SDK to Flutter 3.29.0 / Dart 3.7.0 to match existing APIs.

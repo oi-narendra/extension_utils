@@ -3,6 +3,7 @@
 /// durations, enums, booleans, URIs, futures, objects, and regex patterns.
 library extension_utils;
 
+export 'async_utils.dart';
 export 'bool_utils.dart';
 export 'color_utils.dart';
 export 'datetime_utils.dart';
