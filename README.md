@@ -38,6 +38,29 @@ import 'package:extension_utils/extension_utils.dart';
 
 ---
 
+## Debounce and throttle
+
+```dart
+final search = Debouncer(delay: const Duration(milliseconds: 300));
+search.run(() => searchUsers(query)); // Only the latest call runs.
+search.flush(); // Optional: run it now.
+search.cancel(); // Optional: discard pending work.
+
+final taps = Throttler(interval: const Duration(seconds: 1));
+final accepted = taps.run(() => refresh()); // Runs immediately, or returns false.
+
+// In your State.dispose():
+search.dispose();
+taps.dispose();
+```
+
+Keep these instances outside `build`. Throttle ignores calls during its cooldown;
+it does not queue a final call. Neither helper cancels or waits for asynchronous
+work already started. Handle errors in async callbacks as usual. Calling `run`
+after disposal throws `StateError`.
+
+The example app lets you try debounced search and rapid button taps.
+
 ## API Reference
 
 ### String Extensions
