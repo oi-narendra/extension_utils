@@ -218,7 +218,7 @@ extension StringUtils on String {
   /// ```dart
   /// 'hello'.reverse() // 'olleh'
   /// ```
-  String reverse() => split('').reversed.join();
+  String reverse() => characters.toList().reversed.join();
 
   /// Removes all HTML tags from this string.
   ///

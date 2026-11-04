@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Correct the minimum SDK to Flutter 3.29.0 / Dart 3.7.0 to match existing APIs.
+- Fix removing the last URI query parameter and preserve repeated query values.
+- Preserve UTC dates in calendar boundaries and handle daylight-saving week boundaries.
+- Keep emoji and combining characters intact when reversing strings.
+- Add CI checks and gated tag publishing.
+
 ## 2.0.0
 
 This is a major release with breaking changes. The package has been modernized for Dart 3.x and Flutter 3.19+.
