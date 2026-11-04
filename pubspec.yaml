@@ -1,11 +1,11 @@
 name: extension_utils
-description: A comprehensive utility library with real-world extensions for strings, lists, maps, numbers, datetimes, colors, iterables, durations, enums, booleans, URIs, futures, objects, and regex patterns.
-version: 2.0.0
+description: Practical Flutter and Dart extensions for strings, collections, dates, numbers, colors, URIs, and futures, with common conversions and safe-access helpers.
+version: 2.0.1
 homepage: "https://github.com/oi-narendra/extension_utils"
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.0"
+  flutter: ">=3.29.0"
 
 dependencies:
   flutter:

@@ -45,8 +45,19 @@ extension UriUtils on Uri {
   /// // https://example.com?page=1
   /// ```
   Uri removeQueryParam(String key) {
-    final params = Map<String, String>.from(queryParameters)..remove(key);
-    return replace(queryParameters: params.isEmpty ? null : params);
+    if (!queryParametersAll.containsKey(key)) return this;
+    final params = Map<String, List<String>>.from(queryParametersAll)
+      ..remove(key);
+    if (params.isNotEmpty) return replace(queryParameters: params);
+    // replace(query: null) keeps the original query; an empty string leaves '?'.
+    return Uri(
+      scheme: scheme,
+      userInfo: userInfo,
+      host: hasAuthority ? host : null,
+      port: hasPort ? port : null,
+      path: path,
+      fragment: hasFragment ? fragment : null,
+    );
   }
 
   // ─── Predicates ──────────────────────────────────────────────────────────────

@@ -87,32 +87,36 @@ extension DateTimeUtils on DateTime {
   // ─── Boundaries ──────────────────────────────────────────────────────────────
 
   /// Returns midnight (00:00:00.000) of this date.
-  DateTime get startOfDay => DateTime(year, month, day);
+  DateTime get startOfDay => _calendarDate(year, month, day);
 
   /// Returns the last moment (23:59:59.999) of this date.
-  DateTime get endOfDay => DateTime(year, month, day, 23, 59, 59, 999);
+  DateTime get endOfDay => _calendarDate(year, month, day + 1)
+      .subtract(const Duration(milliseconds: 1));
 
   /// Returns the Monday of this date's week.
   DateTime get startOfWeek =>
-      subtract(Duration(days: weekday - DateTime.monday)).startOfDay;
+      _calendarDate(year, month, day - weekday + DateTime.monday);
 
   /// Returns the Sunday of this date's week (end of week).
   DateTime get endOfWeek =>
-      add(Duration(days: DateTime.sunday - weekday)).endOfDay;
+      _calendarDate(year, month, day + DateTime.sunday - weekday).endOfDay;
 
   /// Returns the first day of this date's month.
-  DateTime get startOfMonth => DateTime(year, month);
+  DateTime get startOfMonth => _calendarDate(year, month);
 
   /// Returns the last moment of this date's month.
   DateTime get endOfMonth =>
-      DateTime(year, month + 1).subtract(const Duration(milliseconds: 1));
+      _calendarDate(year, month + 1).subtract(const Duration(milliseconds: 1));
 
   /// Returns the first day of this date's year.
-  DateTime get startOfYear => DateTime(year);
+  DateTime get startOfYear => _calendarDate(year, 1);
 
   /// Returns the last moment of this date's year.
   DateTime get endOfYear =>
-      DateTime(year + 1).subtract(const Duration(milliseconds: 1));
+      _calendarDate(year + 1, 1).subtract(const Duration(milliseconds: 1));
+
+  DateTime _calendarDate(int year, int month, [int day = 1]) =>
+      isUtc ? DateTime.utc(year, month, day) : DateTime(year, month, day);
 
   // ─── Calendar Info ───────────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
 
 A modern Dart/Flutter utility library providing practical extensions for `String`, `List`, `Map`, `num`, `DateTime`, `Duration`, `Color`, `Iterable`, `Enum`, `bool`, `Uri`, `Future`, `Object`, and `RegExp` types.
 
-Requires **Dart ≥ 3.3.0** and **Flutter ≥ 3.19.0**.
+Requires **Flutter ≥ 3.29.0** (bundled Dart 3.7+).
 
 ## Features
 
@@ -439,3 +439,10 @@ Issues and pull requests are welcome at [github.com/oi-narendra/extension_utils]
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
+
+## Development
+
+CI checks formatting, analysis, package and example tests, the example web build,
+and a publish dry run. A separate job tests the minimum supported Flutter SDK.
+Version tags must match `pubspec.yaml` and point to a commit on `main`; publishing
+only runs after all checks pass.
