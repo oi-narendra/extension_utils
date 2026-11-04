@@ -1,6 +1,6 @@
 name: extension_utils
 description: Practical Flutter and Dart extensions for strings, collections, dates, numbers, colors, URIs, and futures, with common conversions and safe-access helpers.
-version: 2.0.0
+version: 2.0.1
 homepage: "https://github.com/oi-narendra/extension_utils"
 
 environment:
